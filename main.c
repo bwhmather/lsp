@@ -9,6 +9,7 @@ typedef enum lsp_type_t {
     LSP_CONS,
     LSP_INT,
     LSP_SYM,
+    LSP_OP,
 } lsp_type_t;
 
 typedef void lsp_expr_t;
@@ -18,6 +19,8 @@ typedef struct lsp_cons_t {
     lsp_expr_t *cdr;
 } lsp_cons_t;
 
+
+typedef lsp_expr_t *(* lsp_op_t)(lsp_expr_t *);
 
 static lsp_type_t lsp_type(lsp_expr_t *expr) {
     if (expr == NULL) {
@@ -36,7 +39,7 @@ static char *lsp_data(lsp_expr_t *expr) {
 
 static lsp_cons_t *lsp_as_cons(lsp_expr_t *expr) {
     if (lsp_type(expr) != LSP_CONS) {
-        abort();
+        assert(false);
     }
     return (lsp_cons_t *) lsp_data(expr);
 }
@@ -49,6 +52,11 @@ static int *lsp_as_int(lsp_expr_t *expr) {
 static char *lsp_as_sym(lsp_expr_t *expr) {
     assert(lsp_type(expr) == LSP_SYM);
     return (char *) lsp_data(expr);
+}
+
+static lsp_op_t *lsp_as_op(lsp_expr_t *expr) {
+    assert(lsp_type(expr) == LSP_OP);
+    return (lsp_op_t *) lsp_data(expr);
 }
 
 static lsp_expr_t *lsp_car(lsp_expr_t *expr) {
@@ -72,7 +80,7 @@ static lsp_expr_t *lsp_cons(lsp_expr_t *car, lsp_expr_t *cdr) {
     cons_ptr->car = car;
     cons_ptr->cdr = cdr;
     heap_ptr += sizeof(lsp_cons_t);
-    
+
     return expr_ptr;
 }
 
@@ -95,12 +103,21 @@ static void lsp_symbol_stop() {
     lsp_symbol_push('\0');
 }
 
+static lsp_expr_t *lsp_symbol(char *name) {
+    lsp_expr_t *expr = lsp_symbol_start();
+
+    for (int cursor=0; name[cursor] != '\n'; cursor++) {
+        lsp_symbol_push(name[cursor]);
+    }
+    lsp_symbol_stop();
+    return expr;
+}
+
 static lsp_expr_t *lsp_int(int value) {
     lsp_expr_t *expr_ptr = heap_ptr;
 
     lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
     *type_ptr = LSP_INT;
-
     heap_ptr += sizeof(lsp_type_t);
 
     int *int_ptr = (int *) heap_ptr;
@@ -110,23 +127,65 @@ static lsp_expr_t *lsp_int(int value) {
     return expr_ptr;
 }
 
+static lsp_expr_t *lsp_op(lsp_op_t op) {
+    lsp_expr_t *expr_ptr = heap_ptr;
+
+    lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
+    *type_ptr = LSP_OP;
+    heap_ptr += sizeof(lsp_type_t);
+
+    lsp_op_t *op_ptr = (lsp_op_t *) heap_ptr;
+    *op_ptr = op;
+    heap_ptr += sizeof(lsp_op_t);
+
+    return expr_ptr;
+}
+
+static lsp_expr_t *lsp_op_add(lsp_expr_t *args) {
+    int a = *lsp_as_int(lsp_car(args));
+    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
+    return lsp_int(a + b);
+}
+
+static lsp_expr_t *lsp_op_sub(lsp_expr_t *args) {
+    int a = *lsp_as_int(lsp_car(args));
+    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
+    return lsp_int(a - b);
+}
+
+static lsp_expr_t *lsp_op_mul(lsp_expr_t *args) {
+    int a = *lsp_as_int(lsp_car(args));
+    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
+    return lsp_int(a * b);
+}
+
+static lsp_expr_t *lsp_op_div(lsp_expr_t *args) {
+    int a = *lsp_as_int(lsp_car(args));
+    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
+
+    return lsp_int(a / b);
+}
+
+lsp_expr_t *lsp_default_env() {
+    lsp_expr_t *env = NULL;
+
+    env = lsp_cons(lsp_cons(lsp_symbol("+"), lsp_op(&lsp_op_add)), env);
+    env = lsp_cons(lsp_cons(lsp_symbol("-"), lsp_op(&lsp_op_sub)), env);
+    env = lsp_cons(lsp_cons(lsp_symbol("*"), lsp_op(&lsp_op_mul)), env);
+    env = lsp_cons(lsp_cons(lsp_symbol("/"), lsp_op(&lsp_op_div)), env);
+
+    return env;
+}
 
 static lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env) {
-    for (
-        lsp_cons_t *cons = lsp_as_cons(env);
-        cons->cdr != NULL;
-        cons = lsp_as_cons(cons->cdr)
-    ) {
-        lsp_cons_t *entry = lsp_as_cons(cons->car);
-        char *key = lsp_as_sym(entry->car);
-        lsp_expr_t *value = entry->cdr;
-        if (strcmp(sym, key) == 0) {
-            return value;
+    while (lsp_type(env) == LSP_CONS) {
+        if (strcmp(lsp_as_sym(lsp_car(lsp_car(env))), lsp_as_sym(sym)) == 0) {
+            return lsp_cdr(lsp_car(env));
         }
+        env = lsp_cdr(env);
     }
     assert(0);
 }
-
 
 static lsp_expr_t *lsp_parse() {
     char next;
@@ -218,10 +277,6 @@ static lsp_expr_t *lsp_parse() {
     }
 }
 
-static lsp_expr_t *lsp_invoke(lsp_expr_t *proc, lsp_expr_t *env) {
-    assert(false);
-}
-
 static void lsp_dump(lsp_expr_t *expr) {
     switch (lsp_type(expr)) {
         case LSP_NULL:
@@ -248,11 +303,13 @@ static void lsp_dump(lsp_expr_t *expr) {
         case LSP_SYM:
             printf("%s", lsp_as_sym(expr));
             break;
+        case LSP_OP:
+            printf("<builtin>");
+            break;
         default:
             assert(false);
     }
 }
-
 
 lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     switch (lsp_type(expr)) {
@@ -262,6 +319,7 @@ lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
             if (lsp_type(lsp_car(expr)) == LSP_SYM) {
                 char *sym = lsp_as_sym(lsp_car(expr));
                 if (strcmp(sym, "if") == 0) {
+                    assert(false);
                 } else if (strcmp(sym, "quote") == 0) {
                     return lsp_car(lsp_cdr(expr));
                 } else if (strcmp(sym, "define") == 0) {
@@ -271,21 +329,33 @@ lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
                 } else if (strcmp(sym, "lambda") == 0) {
                     assert(false);
                 }
-            } else {
-                lsp_expr_t *proc = lsp_eval(expr, env);
-                return lsp_invoke(proc, lsp_cdr(expr));
             }
 
+            lsp_expr_t *revaled = NULL;
+            while (lsp_type(expr) == LSP_CONS) {
+                revaled = lsp_cons(lsp_eval(lsp_car(expr), env), revaled);
+                expr = lsp_cdr(expr);
+            }
+            lsp_expr_t *evaled = NULL;
+            while (lsp_type(revaled) == LSP_CONS) {
+                evaled = lsp_cons(lsp_car(revaled), evaled);
+                revaled = lsp_cdr(revaled);
+            }
+
+            lsp_expr_t *function = lsp_car(evaled);
+            lsp_expr_t *args = lsp_cdr(evaled);
+
+            if (lsp_type(function) == LSP_OP) {
+                lsp_op_t op = *lsp_as_op(function);
+                return op(args);
+            }
+
+            assert(false);
         default:
             return expr;
     }
 
 }
-
-lsp_expr_t *lsp_default_env() {
-    return NULL;
-}
-
 
 
 int main(int argc, char **argv) {
@@ -293,9 +363,6 @@ int main(int argc, char **argv) {
     heap_ptr = heap_data + sizeof(lsp_type_t);
 
     lsp_expr_t *ast = lsp_parse();
-    lsp_dump(ast);
-    printf("\n");
-
-    //lsp_expr_t *result = lsp_eval(ast, lsp_default_env());
-    //lsp_dump(result);
+    lsp_expr_t *result = lsp_eval(lsp_car(ast), lsp_default_env());
+    lsp_dump(result);
 }
