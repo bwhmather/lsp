@@ -287,40 +287,6 @@ static lsp_expr_t *lsp_parse() {
     }
 }
 
-static void lsp_dump(lsp_expr_t *expr) {
-    switch (lsp_type(expr)) {
-        case LSP_NULL:
-            printf("()");
-            break;
-        case LSP_CONS:
-            printf("(");
-            while (lsp_type(expr) == LSP_CONS) {
-                lsp_dump(lsp_car(expr));
-                expr = lsp_cdr(expr);
-                if (lsp_type(expr) == LSP_CONS) {
-                    printf(" ");
-                }
-            }
-            if (lsp_type(expr) != LSP_NULL) {
-                printf(" . ");
-                lsp_dump(expr);
-            }
-            printf(")");
-            break;
-        case LSP_INT:
-            printf("%i", *lsp_as_int(expr));
-            break;
-        case LSP_SYM:
-            printf("%s", lsp_as_sym(expr));
-            break;
-        case LSP_OP:
-            printf("<builtin>");
-            break;
-        default:
-            assert(false);
-    }
-}
-
 lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     if (lsp_type(expr) == LSP_SYM) {
         // Expression is a name identifying a variable that can be loaded
@@ -378,6 +344,39 @@ lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     }
 }
 
+static void lsp_print(lsp_expr_t *expr) {
+    switch (lsp_type(expr)) {
+        case LSP_NULL:
+            printf("()");
+            break;
+        case LSP_CONS:
+            printf("(");
+            while (lsp_type(expr) == LSP_CONS) {
+                lsp_print(lsp_car(expr));
+                expr = lsp_cdr(expr);
+                if (lsp_type(expr) == LSP_CONS) {
+                    printf(" ");
+                }
+            }
+            if (lsp_type(expr) != LSP_NULL) {
+                printf(" . ");
+                lsp_print(expr);
+            }
+            printf(")");
+            break;
+        case LSP_INT:
+            printf("%i", *lsp_as_int(expr));
+            break;
+        case LSP_SYM:
+            printf("%s", lsp_as_sym(expr));
+            break;
+        case LSP_OP:
+            printf("<builtin>");
+            break;
+        default:
+            assert(false);
+    }
+}
 
 int main(int argc, char **argv) {
     heap_data = malloc(128 * 1024 * 1024);
@@ -385,5 +384,5 @@ int main(int argc, char **argv) {
 
     lsp_expr_t *ast = lsp_parse();
     lsp_expr_t *result = lsp_eval(lsp_car(ast), lsp_default_env());
-    lsp_dump(result);
+    lsp_print(result);
 }
