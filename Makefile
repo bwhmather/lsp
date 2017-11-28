@@ -1,4 +1,4 @@
 lsp: main.c
-	gcc main.c -o lsp -std=c11
+	gcc -Wall -Wextra -pedantic main.c -o lsp -std=c11 -g
 
 
