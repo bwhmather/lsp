@@ -322,49 +322,60 @@ static void lsp_dump(lsp_expr_t *expr) {
 }
 
 lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
-    switch (lsp_type(expr)) {
-        case LSP_SYM:
-            return lsp_lookup(expr, env);
-        case LSP_CONS:
-            if (lsp_type(lsp_car(expr)) == LSP_SYM) {
-                char *sym = lsp_as_sym(lsp_car(expr));
-                if (strcmp(sym, "if") == 0) {
-                    assert(false);
-                } else if (strcmp(sym, "quote") == 0) {
-                    return lsp_car(lsp_cdr(expr));
-                } else if (strcmp(sym, "define") == 0) {
-                    assert(false);
-                } else if (strcmp(sym, "set!") == 0) {
-                    assert(false);
-                } else if (strcmp(sym, "lambda") == 0) {
-                    assert(false);
-                }
-            }
+    if (lsp_type(expr) == LSP_SYM) {
+        // Expression is a name identifying a variable that can be loaded
+        // from the environment.
+        return lsp_lookup(expr, env);
 
-            lsp_expr_t *revaled = NULL;
-            while (lsp_type(expr) == LSP_CONS) {
-                revaled = lsp_cons(lsp_eval(lsp_car(expr), env), revaled);
-                expr = lsp_cdr(expr);
+    } else if (lsp_type(expr) == LSP_CONS) {
+        // Expression is a list representing either a special form or an
+        // invocation of a procedure or built-in operator.
+        if (lsp_type(lsp_car(expr)) == LSP_SYM) {
+            char *sym = lsp_as_sym(lsp_car(expr));
+            if (strcmp(sym, "if") == 0) {
+                assert(false);
             }
-            lsp_expr_t *evaled = NULL;
-            while (lsp_type(revaled) == LSP_CONS) {
-                evaled = lsp_cons(lsp_car(revaled), evaled);
-                revaled = lsp_cdr(revaled);
+            if (strcmp(sym, "quote") == 0) {
+                return lsp_car(lsp_cdr(expr));
             }
-
-            lsp_expr_t *function = lsp_car(evaled);
-            lsp_expr_t *args = lsp_cdr(evaled);
-
-            if (lsp_type(function) == LSP_OP) {
-                lsp_op_t op = *lsp_as_op(function);
-                return op(args);
+            if (strcmp(sym, "define") == 0) {
+                assert(false);
             }
+            if (strcmp(sym, "set!") == 0) {
+                assert(false);
+            }
+            if (strcmp(sym, "lambda") == 0) {
+                assert(false);
+            }
+        }
 
+        // Expression is not a special form.  We evaluate all items in the
+        // list and then pass the tail to the built-in or procedure
+        // represented by the first item.
+        lsp_expr_t *evaled = NULL;
+        lsp_expr_t *cursor = expr;
+        while (lsp_type(cursor) == LSP_CONS) {
+            evaled = lsp_cons(lsp_eval(lsp_car(cursor), env), evaled);
+            cursor = lsp_cdr(cursor);
+        }
+        evaled = lsp_reverse(evaled);
+
+        lsp_expr_t *callable = lsp_car(evaled);
+        lsp_expr_t *args = lsp_cdr(evaled);
+
+        if (lsp_type(callable) == LSP_OP) {
+            // Expression is a call to a built-in procedure represented by a
+            // function pointer.
+            lsp_op_t op = *lsp_as_op(callable);
+            return op(args);
+        } else {
             assert(false);
-        default:
-            return expr;
-    }
+        }
 
+    } else {
+        // Expression is a literal that can be returned as-is.
+        return expr;
+    }
 }
 
 
