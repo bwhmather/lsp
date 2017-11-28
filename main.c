@@ -287,6 +287,16 @@ static lsp_expr_t *lsp_parse() {
     }
 }
 
+static bool lsp_is_truthy(lsp_expr_t *expr) {
+    if (lsp_type(expr) == LSP_INT) {
+        return *lsp_as_int(expr) != 0;
+    } else if (lsp_type(expr) == LSP_NULL) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 static lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     if (lsp_type(expr) == LSP_SYM) {
         // Expression is a name identifying a variable that can be loaded
@@ -299,7 +309,22 @@ static lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
         if (lsp_type(lsp_car(expr)) == LSP_SYM) {
             char *sym = lsp_as_sym(lsp_car(expr));
             if (strcmp(sym, "if") == 0) {
-                assert(false);
+                lsp_expr_t *cursor = lsp_cdr(expr);
+
+                lsp_expr_t *predicate = lsp_car(cursor);
+                cursor = lsp_cdr(cursor);
+
+                lsp_expr_t *subsequent = lsp_car(cursor);
+                cursor = lsp_cdr(cursor);
+
+                lsp_expr_t *alternate = lsp_car(cursor);
+                cursor = lsp_cdr(cursor);
+
+                if (lsp_is_truthy(lsp_eval(predicate, env))) {
+                    return lsp_eval(subsequent, env);
+                } else {
+                    return lsp_eval(alternate, env);
+                }
             }
             if (strcmp(sym, "quote") == 0) {
                 return lsp_car(lsp_cdr(expr));
