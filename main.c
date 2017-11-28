@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <stdbool.h>
 
 typedef enum lsp_type_t {
-    LSP_CONS = 1,
+    LSP_NULL = 0,
+    LSP_CONS,
     LSP_INT,
     LSP_SYM,
 } lsp_type_t;
@@ -18,6 +20,9 @@ typedef struct lsp_cons_t {
 
 
 static lsp_type_t lsp_type(lsp_expr_t *expr) {
+    if (expr == NULL) {
+        return LSP_NULL;
+    }
     lsp_type_t *type_ptr = (lsp_type_t *) expr;
     return *type_ptr;
 }
@@ -30,17 +35,20 @@ static char *lsp_data(lsp_expr_t *expr) {
 }
 
 static lsp_cons_t *lsp_as_cons(lsp_expr_t *expr) {
-    assert(lsp_type(expr) == LSP_CONS);
-    return (lsp_cons_t *) expr;
+    if (lsp_type(expr) != LSP_CONS) {
+        abort();
+    }
+    return (lsp_cons_t *) lsp_data(expr);
 }
 
 static int *lsp_as_int(lsp_expr_t *expr) {
     assert(lsp_type(expr) == LSP_INT);
-    return (int *) expr;
+    return (int *) lsp_data(expr);
 }
 
 static char *lsp_as_sym(lsp_expr_t *expr) {
     assert(lsp_type(expr) == LSP_SYM);
+    return (char *) lsp_data(expr);
 }
 
 static lsp_expr_t *lsp_car(lsp_expr_t *expr) {
@@ -74,6 +82,8 @@ static lsp_expr_t *lsp_symbol_start() {
     lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
     *type_ptr = LSP_SYM;
     heap_ptr += sizeof(lsp_type_t);
+
+    return expr_ptr;
 }
 
 static void lsp_symbol_push(char character) {
@@ -84,6 +94,22 @@ static void lsp_symbol_push(char character) {
 static void lsp_symbol_stop() {
     lsp_symbol_push('\0');
 }
+
+static lsp_expr_t *lsp_int(int value) {
+    lsp_expr_t *expr_ptr = heap_ptr;
+
+    lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
+    *type_ptr = LSP_INT;
+
+    heap_ptr += sizeof(lsp_type_t);
+
+    int *int_ptr = (int *) heap_ptr;
+    *int_ptr = value;
+    heap_ptr += sizeof(int);
+
+    return expr_ptr;
+}
+
 
 static lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env) {
     for (
@@ -112,18 +138,6 @@ static lsp_expr_t *lsp_parse() {
     // cell in each list body.
     lsp_expr_t *stack = NULL;
 
-
-    // yield an expression each time around the while loop.
-    // stack is a list of frames
-    // frame 
-    //
-    // Alternatives:
-    //   - Mutate cdr to grow frame
-    //   - Build frame in reverse then reverse on )
-
-    // finish:
-    //   reverse
-
     next = getchar();
 
     while (true) {
@@ -132,6 +146,7 @@ static lsp_expr_t *lsp_parse() {
         // Consume whitespace whitespace.
         if (next == ' ' || next == '\n') {
             next = getchar();
+            continue;
         } else if (next == '(') {
             next = getchar();
 
@@ -142,20 +157,25 @@ static lsp_expr_t *lsp_parse() {
             // No expression to add.  Skip logic at end of loop.
             continue;
 
-        } else if (next == ')') {
-            next = getchar();
-
+        } else if (next == ')' || next == EOF) {
             // Unwind and reverse the current body list and store it as the
             // current expression.
             while (lsp_type(body) == LSP_CONS) {
-                lsp_cons_t *body_head = lsp_as_cons(body);
                 expression = lsp_cons(lsp_car(body), expression);
                 body = lsp_cdr(body);
+            }
+
+            if (next == EOF) {
+                return expression;
             }
 
             // Pop the containing body from the stack and set it as current.
             body = lsp_car(stack);
             stack = lsp_cdr(stack);
+
+            next = getchar();
+        } else if (next == '.') {
+            // TODO figure out how to parse non-list cons cells.
         } else if (next >= '0' && next <= '9') {
             int accumulator = 0;
 
@@ -166,19 +186,31 @@ static lsp_expr_t *lsp_parse() {
                     accumulator += (int) (next - '0');
                 } else if (
                     next == '(' || next == ')' ||
-                    next == ' ' || next == '\n'
+                    next == ' ' || next == '\n' ||
+                    next == EOF
                 ) {
-
+                    expression = lsp_int(accumulator);
+                    break;
                 } else {
                     assert(false);
                 }
+                next = getchar();
             }
         } else {
+            expression = lsp_symbol_start();
             // Parse symbol.
             while (true) {
+                if (
+                    next == '(' || next == ')' ||
+                    next == ' ' || next == '\n'
+                ) {
+                    break;
+                }
 
-
+                lsp_symbol_push(next);
+                next = getchar();
             }
+            lsp_symbol_stop();
         }
 
         // Push expression.
@@ -187,8 +219,40 @@ static lsp_expr_t *lsp_parse() {
 }
 
 static lsp_expr_t *lsp_invoke(lsp_expr_t *proc, lsp_expr_t *env) {
-
+    assert(false);
 }
+
+static void lsp_dump(lsp_expr_t *expr) {
+    switch (lsp_type(expr)) {
+        case LSP_NULL:
+            printf("()");
+            break;
+        case LSP_CONS:
+            printf("(");
+            while (lsp_type(expr) == LSP_CONS) {
+                lsp_dump(lsp_car(expr));
+                expr = lsp_cdr(expr);
+                if (lsp_type(expr) == LSP_CONS) {
+                    printf(" ");
+                }
+            }
+            if (lsp_type(expr) != LSP_NULL) {
+                printf(" . ");
+                lsp_dump(expr);
+            }
+            printf(")");
+            break;
+        case LSP_INT:
+            printf("%i", *lsp_as_int(expr));
+            break;
+        case LSP_SYM:
+            printf("%s", lsp_as_sym(expr));
+            break;
+        default:
+            assert(false);
+    }
+}
+
 
 lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     switch (lsp_type(expr)) {
@@ -199,17 +263,17 @@ lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
                 char *sym = lsp_as_sym(lsp_car(expr));
                 if (strcmp(sym, "if") == 0) {
                 } else if (strcmp(sym, "quote") == 0) {
-                    return;
+                    return lsp_car(lsp_cdr(expr));
                 } else if (strcmp(sym, "define") == 0) {
-                    return;
+                    assert(false);
                 } else if (strcmp(sym, "set!") == 0) {
-                    return;
+                    assert(false);
                 } else if (strcmp(sym, "lambda") == 0) {
-                    return;
+                    assert(false);
                 }
             } else {
-                lsp_expr_t *proc = eval(expr, env);
-                return lsp_invoke(proc, cdr(expr));
+                lsp_expr_t *proc = lsp_eval(expr, env);
+                return lsp_invoke(proc, lsp_cdr(expr));
             }
 
         default:
@@ -218,14 +282,20 @@ lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
 
 }
 
+lsp_expr_t *lsp_default_env() {
+    return NULL;
+}
+
 
 
 int main(int argc, char **argv) {
     heap_data = malloc(128 * 1024 * 1024);
-    heap_ptr = heap_data;
+    heap_ptr = heap_data + sizeof(lsp_type_t);
 
     lsp_expr_t *ast = lsp_parse();
+    lsp_dump(ast);
+    printf("\n");
 
-    lsp_expr_t *result = lsp_eval(ast, lsp_default_env());
-    lsp_dump(result);
+    //lsp_expr_t *result = lsp_eval(ast, lsp_default_env());
+    //lsp_dump(result);
 }
