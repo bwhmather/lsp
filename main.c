@@ -287,7 +287,7 @@ static lsp_expr_t *lsp_parse() {
     }
 }
 
-lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
+static lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     if (lsp_type(expr) == LSP_SYM) {
         // Expression is a name identifying a variable that can be loaded
         // from the environment.
