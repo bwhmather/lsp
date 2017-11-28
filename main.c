@@ -59,16 +59,6 @@ static lsp_op_t *lsp_as_op(lsp_expr_t *expr) {
     return (lsp_op_t *) lsp_data(expr);
 }
 
-static lsp_expr_t *lsp_car(lsp_expr_t *expr) {
-    lsp_cons_t *cons = lsp_as_cons(expr);
-    return cons->car;
-}
-
-static lsp_expr_t *lsp_cdr(lsp_expr_t *expr) {
-    lsp_cons_t *cons = lsp_as_cons(expr);
-    return cons->cdr;
-}
-
 static lsp_expr_t *lsp_cons(lsp_expr_t *car, lsp_expr_t *cdr) {
     lsp_expr_t *expr_ptr = (lsp_expr_t *) heap_ptr;
 
@@ -139,6 +129,26 @@ static lsp_expr_t *lsp_op(lsp_op_t op) {
     heap_ptr += sizeof(lsp_op_t);
 
     return expr_ptr;
+}
+
+static lsp_expr_t *lsp_car(lsp_expr_t *expr) {
+    lsp_cons_t *cons = lsp_as_cons(expr);
+    return cons->car;
+}
+
+static lsp_expr_t *lsp_cdr(lsp_expr_t *expr) {
+    lsp_cons_t *cons = lsp_as_cons(expr);
+    return cons->cdr;
+}
+
+static lsp_expr_t *lsp_reverse(lsp_expr_t *input) {
+    lsp_expr_t *output = NULL;
+    while (lsp_type(input) == LSP_CONS) {
+        output = lsp_cons(lsp_car(input), output);
+        input = lsp_cdr(input);
+    }
+    assert(lsp_type(input) == LSP_NULL);
+    return output;
 }
 
 static lsp_expr_t *lsp_op_add(lsp_expr_t *args) {
