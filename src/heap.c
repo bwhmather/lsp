@@ -161,15 +161,6 @@ lsp_expr_t *lsp_reverse(lsp_expr_t *input) {
     return output;
 }
 
-lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env) {
-    while (lsp_type(env) == LSP_CONS) {
-        if (strcmp(lsp_as_sym(lsp_car(lsp_car(env))), lsp_as_sym(sym)) == 0) {
-            return lsp_cdr(lsp_car(env));
-        }
-        env = lsp_cdr(env);
-    }
-    assert(0);
-}
 
 bool lsp_is_truthy(lsp_expr_t *expr) {
     if (lsp_type(expr) == LSP_INT) {

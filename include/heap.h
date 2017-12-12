@@ -51,8 +51,6 @@ lsp_expr_t *lsp_cdddr(lsp_expr_t *expr);
 
 lsp_expr_t *lsp_reverse(lsp_expr_t *input);
 
-lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env);
-
 bool lsp_is_truthy(lsp_expr_t *expr);
 
 void lsp_print(lsp_expr_t *expr);

@@ -4,6 +4,17 @@
 #include <assert.h>
 
 
+static lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env) {
+    while (lsp_type(env) == LSP_CONS) {
+        if (strcmp(lsp_as_sym(lsp_car(lsp_car(env))), lsp_as_sym(sym)) == 0) {
+            return lsp_cdr(lsp_car(env));
+        }
+        env = lsp_cdr(env);
+    }
+    assert(0);
+}
+
+
 lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     if (lsp_type(expr) == LSP_SYM) {
         // Expression is a name identifying a variable that can be loaded
