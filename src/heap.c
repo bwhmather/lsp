@@ -101,13 +101,6 @@ lsp_expr_t *lsp_op(lsp_op_t op) {
     return expr_ptr;
 }
 
-lsp_cons_t *lsp_as_cons(lsp_expr_t *expr) {
-    if (lsp_type(expr) != LSP_CONS) {
-        assert(false);
-    }
-    return (lsp_cons_t *) lsp_data(expr);
-}
-
 int *lsp_as_int(lsp_expr_t *expr) {
     assert(lsp_type(expr) == LSP_INT);
     return (int *) lsp_data(expr);
@@ -125,7 +118,11 @@ lsp_op_t *lsp_as_op(lsp_expr_t *expr) {
 
 
 lsp_expr_t *lsp_car(lsp_expr_t *expr) {
-    lsp_cons_t *cons = lsp_as_cons(expr);
+    if (lsp_type(expr) != LSP_CONS) {
+        assert(false);
+    }
+    lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
+
     return cons->car;
 }
 
@@ -138,7 +135,11 @@ lsp_expr_t *lsp_caaar(lsp_expr_t *expr) {
 }
 
 lsp_expr_t *lsp_cdr(lsp_expr_t *expr) {
-    lsp_cons_t *cons = lsp_as_cons(expr);
+    if (lsp_type(expr) != LSP_CONS) {
+        assert(false);
+    }
+    lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
+
     return cons->cdr;
 }
 

@@ -36,7 +36,6 @@ lsp_expr_t *lsp_int(int value);
 
 lsp_expr_t *lsp_op(lsp_op_t op);
 
-lsp_cons_t *lsp_as_cons(lsp_expr_t *expr);
 int *lsp_as_int(lsp_expr_t *expr);
 char *lsp_as_sym(lsp_expr_t *expr);
 lsp_op_t *lsp_as_op(lsp_expr_t *expr);
