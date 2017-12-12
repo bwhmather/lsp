@@ -5,6 +5,11 @@
 #include <string.h>
 #include <assert.h>
 
+typedef struct lsp_cons_t {
+    lsp_expr_t *car;
+    lsp_expr_t *cdr;
+} lsp_cons_t;
+
 
 static char *heap_data;
 static char *heap_ptr;

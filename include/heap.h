@@ -13,12 +13,6 @@ typedef enum lsp_type_t {
 
 typedef void lsp_expr_t;
 
-typedef struct lsp_cons_t {
-    lsp_expr_t *car;
-    lsp_expr_t *cdr;
-} lsp_cons_t;
-
-
 typedef lsp_expr_t *(* lsp_op_t)(lsp_expr_t *);
 
 void lsp_heap_init();
