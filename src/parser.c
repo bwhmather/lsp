@@ -105,6 +105,7 @@ lsp_expr_t *lsp_parse() {
         lsp_consume_whitespace();
         
         char next = lsp_parser_next();
+        char lookahead = lsp_parser_lookahead();
 
         if (next == '(') {
             // Push the current body onto the stack, and start a new one.
@@ -139,15 +140,9 @@ lsp_expr_t *lsp_parse() {
             lsp_parser_advance();
         } else if (next == '.') {
             // TODO figure out how to parse non-list cons cells.
-        } else if (next == '-') {
-            char lookahead = lsp_parser_lookahead();
-            if (lookahead >= '0' && lookahead <= '9') {
-                expression = lsp_parse_number();
-            } else {
-                expression = lsp_parse_symbol();
-            }
         } else if (
-            (next >= '0' && next <= '9')
+            (next >= '0' && next <= '9') ||
+            (next == '-' && lookahead >= '0' && lookahead <= '9')
         ) {
             expression = lsp_parse_number();
         } else if (lsp_is_symbol_character(next)) {
