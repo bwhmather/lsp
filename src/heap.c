@@ -150,6 +150,23 @@ lsp_expr_t *lsp_cdddr(lsp_expr_t *expr) {
     return lsp_cdr(lsp_cddr(expr));
 }
 
+void lsp_set_car(lsp_expr_t *expr, lsp_expr_t *new_car) {
+    if (lsp_type(expr) != LSP_CONS) {
+        assert(false);
+    }
+    lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
+
+    cons->car = new_car;
+}
+
+void lsp_set_cdr(lsp_expr_t *expr, lsp_expr_t *new_cdr) {
+    if (lsp_type(expr) != LSP_CONS) {
+        assert(false);
+    }
+    lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
+
+    cons->cdr = new_cdr;
+}
 
 lsp_expr_t *lsp_reverse(lsp_expr_t *input) {
     lsp_expr_t *output = NULL;

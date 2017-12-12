@@ -49,6 +49,9 @@ lsp_expr_t *lsp_cdr(lsp_expr_t *expr);
 lsp_expr_t *lsp_cddr(lsp_expr_t *expr);
 lsp_expr_t *lsp_cdddr(lsp_expr_t *expr);
 
+void lsp_set_car(lsp_expr_t *expr, lsp_expr_t *new_car);
+void lsp_set_cdr(lsp_expr_t *expr, lsp_expr_t *new_cdr);
+
 lsp_expr_t *lsp_reverse(lsp_expr_t *input);
 
 bool lsp_is_truthy(lsp_expr_t *expr);
