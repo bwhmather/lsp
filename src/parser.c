@@ -4,9 +4,73 @@
 #include <assert.h>
 
 
-lsp_expr_t *lsp_parse() {
-    char next;
+static char lsp_parser_peek() {
+    int next = getc(stdin);
+    ungetc(next, stdin);
+    return next == EOF ? '\0' : next;
+}
 
+
+static char lsp_parser_pop() {
+    int next = getc(stdin);
+    return next == EOF ? '\0' : next;
+}
+
+
+static void lsp_consume_whitespace() {
+    char next = lsp_parser_peek();
+    while (next == ' ' || next == '\n' || next == '\t') {
+        lsp_parser_pop();
+        next = lsp_parser_peek();
+    }
+}
+
+
+static lsp_expr_t *lsp_parse_symbol() {
+    lsp_expr_t *symbol = lsp_symbol_start();
+
+    char next = lsp_parser_peek();
+
+    while (
+        (next >= 'a' && next <= 'z') ||
+        (next >= 'A' && next <= 'Z') ||
+        next == '-' || next == '_' 
+    ) {
+        lsp_symbol_push(next);
+        lsp_parser_pop();
+        next = lsp_parser_peek();
+    }
+
+    lsp_symbol_stop();
+
+    return symbol;
+}
+
+
+static lsp_expr_t *lsp_parse_number() {
+    bool negative = false;
+    int accumulator = 0;
+
+    char next = lsp_parser_peek();
+    if (next == '-') {
+        negative = true;
+        lsp_parser_pop();
+        next = lsp_parser_peek();
+    }
+
+    while (next >= '0' && next <= '9') {
+        accumulator *= 10;
+        accumulator += (int) (next - '0');
+
+        lsp_parser_pop();
+        next = lsp_parser_peek();
+    }
+
+    return lsp_int(negative ? -accumulator : accumulator);
+}
+
+
+lsp_expr_t *lsp_parse() {
     // The reversed list of elements in the current body.
     lsp_expr_t *body = NULL;
 
@@ -14,26 +78,27 @@ lsp_expr_t *lsp_parse() {
     // cell in each list body.
     lsp_expr_t *stack = NULL;
 
-    next = getchar();
 
     while (true) {
-        lsp_expr_t *expression = NULL;
+        lsp_consume_whitespace();
+        
+        char next = lsp_parser_peek();
 
-        // Consume whitespace whitespace.
-        if (next == ' ' || next == '\n') {
-            next = getchar();
-            continue;
-        } else if (next == '(') {
-            next = getchar();
-
+        if (next == '(') {
             // Push the current body onto the stack, and start a new one.
             stack = lsp_cons(body, stack);
             body = NULL;
 
+            lsp_parser_pop();
+
             // No expression to add.  Skip logic at end of loop.
             continue;
+        }
 
-        } else if (next == ')' || next == EOF) {
+        // Parse the next expression and save it in the current environment. 
+        lsp_expr_t *expression;
+
+        if (next == ')' || next == '\0') {
             // Unwind and reverse the current body list and store it as the
             // current expression.
             while (lsp_type(body) == LSP_CONS) {
@@ -41,7 +106,7 @@ lsp_expr_t *lsp_parse() {
                 body = lsp_cdr(body);
             }
 
-            if (next == EOF) {
+            if (next == '\0') {
                 return expression;
             }
 
@@ -49,44 +114,21 @@ lsp_expr_t *lsp_parse() {
             body = lsp_car(stack);
             stack = lsp_cdr(stack);
 
-            next = getchar();
+            lsp_parser_pop();
         } else if (next == '.') {
             // TODO figure out how to parse non-list cons cells.
-        } else if (next >= '0' && next <= '9') {
-            int accumulator = 0;
-
-            // Parse number.
-            while (true) {
-                if (next >= '0' && next <= '9') {
-                    accumulator *= 10;
-                    accumulator += (int) (next - '0');
-                } else if (
-                    next == '(' || next == ')' ||
-                    next == ' ' || next == '\n' ||
-                    next == EOF
-                ) {
-                    expression = lsp_int(accumulator);
-                    break;
-                } else {
-                    assert(false);
-                }
-                next = getchar();
-            }
+        } else if (
+            (next >= '0' && next <= '9') ||
+            next == '-'
+        ) {
+            expression = lsp_parse_number();
+        } else if (
+            (next >= 'a' && next <= 'z') ||
+            (next >= 'A' && next <= 'Z')
+        ) {
+            expression = lsp_parse_symbol();
         } else {
-            expression = lsp_symbol_start();
-            // Parse symbol.
-            while (true) {
-                if (
-                    next == '(' || next == ')' ||
-                    next == ' ' || next == '\n'
-                ) {
-                    break;
-                }
-
-                lsp_symbol_push(next);
-                next = getchar();
-            }
-            lsp_symbol_stop();
+            assert(false);
         }
 
         // Push expression.
