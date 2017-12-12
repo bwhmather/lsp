@@ -5,13 +5,22 @@
 
 
 static lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env) {
-    while (lsp_type(env) == LSP_CONS) {
-        if (strcmp(lsp_as_sym(lsp_car(lsp_car(env))), lsp_as_sym(sym)) == 0) {
-            return lsp_cdr(lsp_car(env));
+    // Try to find symbol in local scope.
+    lsp_expr_t *scope = lsp_car(env);
+
+    while (lsp_type(scope) == LSP_CONS) {
+        if (strcmp(
+            lsp_as_sym(lsp_car(lsp_car(scope))),
+            lsp_as_sym(sym)
+        ) == 0) {
+            return lsp_cdr(lsp_car(scope));
         }
-        env = lsp_cdr(env);
+        scope = lsp_cdr(scope);
     }
-    assert(0);
+
+    // Fallback to searching in parent scope.
+    lsp_expr_t *parent_scope = lsp_cdr(env);
+    return lsp_lookup(sym, parent_scope);
 }
 
 

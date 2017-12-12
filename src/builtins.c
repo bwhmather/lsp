@@ -32,12 +32,16 @@ static lsp_expr_t *lsp_op_div(lsp_expr_t *args) {
 }
 
 lsp_expr_t *lsp_default_env() {
-    lsp_expr_t *env = NULL;
+    lsp_expr_t *scope = NULL;
 
-    env = lsp_cons(lsp_cons(lsp_symbol("+"), lsp_op(&lsp_op_add)), env);
-    env = lsp_cons(lsp_cons(lsp_symbol("-"), lsp_op(&lsp_op_sub)), env);
-    env = lsp_cons(lsp_cons(lsp_symbol("*"), lsp_op(&lsp_op_mul)), env);
-    env = lsp_cons(lsp_cons(lsp_symbol("/"), lsp_op(&lsp_op_div)), env);
+    scope = lsp_cons(lsp_cons(lsp_symbol("+"), lsp_op(&lsp_op_add)), scope);
+    scope = lsp_cons(lsp_cons(lsp_symbol("-"), lsp_op(&lsp_op_sub)), scope);
+    scope = lsp_cons(lsp_cons(lsp_symbol("*"), lsp_op(&lsp_op_mul)), scope);
+    scope = lsp_cons(lsp_cons(lsp_symbol("/"), lsp_op(&lsp_op_div)), scope);
+
+    lsp_expr_t *parent = NULL;
+
+    lsp_expr_t *env = lsp_cons(scope, parent);
 
     return env;
 }
