@@ -34,21 +34,32 @@ static char *lsp_data(lsp_expr_t *expr) {
 }
 
 
-lsp_expr_t *lsp_cons(lsp_expr_t *car, lsp_expr_t *cdr) {
-    lsp_expr_t *expr_ptr = (lsp_expr_t *) heap_ptr;
+/**
+ * Functions for working with integer objects.
+ */
+lsp_expr_t *lsp_int(int value) {
+    lsp_expr_t *expr_ptr = heap_ptr;
 
     lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
-    *type_ptr = LSP_CONS;
+    *type_ptr = LSP_INT;
     heap_ptr += sizeof(lsp_type_t);
 
-    lsp_cons_t *cons_ptr = (lsp_cons_t *) heap_ptr;
-    cons_ptr->car = car;
-    cons_ptr->cdr = cdr;
-    heap_ptr += sizeof(lsp_cons_t);
+    int *int_ptr = (int *) heap_ptr;
+    *int_ptr = value;
+    heap_ptr += sizeof(int);
 
     return expr_ptr;
 }
 
+int *lsp_as_int(lsp_expr_t *expr) {
+    assert(lsp_type(expr) == LSP_INT);
+    return (int *) lsp_data(expr);
+}
+
+
+/**
+ * Functions for working with symbols.
+ */
 lsp_expr_t *lsp_symbol_start() {
     lsp_expr_t *expr_ptr = heap_ptr;
 
@@ -78,49 +89,29 @@ lsp_expr_t *lsp_symbol(char *name) {
     return expr;
 }
 
-lsp_expr_t *lsp_int(int value) {
-    lsp_expr_t *expr_ptr = heap_ptr;
-
-    lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
-    *type_ptr = LSP_INT;
-    heap_ptr += sizeof(lsp_type_t);
-
-    int *int_ptr = (int *) heap_ptr;
-    *int_ptr = value;
-    heap_ptr += sizeof(int);
-
-    return expr_ptr;
-}
-
-lsp_expr_t *lsp_op(lsp_op_t op) {
-    lsp_expr_t *expr_ptr = heap_ptr;
-
-    lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
-    *type_ptr = LSP_OP;
-    heap_ptr += sizeof(lsp_type_t);
-
-    lsp_op_t *op_ptr = (lsp_op_t *) heap_ptr;
-    *op_ptr = op;
-    heap_ptr += sizeof(lsp_op_t);
-
-    return expr_ptr;
-}
-
-int *lsp_as_int(lsp_expr_t *expr) {
-    assert(lsp_type(expr) == LSP_INT);
-    return (int *) lsp_data(expr);
-}
-
 char *lsp_as_sym(lsp_expr_t *expr) {
     assert(lsp_type(expr) == LSP_SYM);
     return (char *) lsp_data(expr);
 }
 
-lsp_op_t *lsp_as_op(lsp_expr_t *expr) {
-    assert(lsp_type(expr) == LSP_OP);
-    return (lsp_op_t *) lsp_data(expr);
-}
 
+/**
+ * Functions for working with cons cells.
+ */
+lsp_expr_t *lsp_cons(lsp_expr_t *car, lsp_expr_t *cdr) {
+    lsp_expr_t *expr_ptr = (lsp_expr_t *) heap_ptr;
+
+    lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
+    *type_ptr = LSP_CONS;
+    heap_ptr += sizeof(lsp_type_t);
+
+    lsp_cons_t *cons_ptr = (lsp_cons_t *) heap_ptr;
+    cons_ptr->car = car;
+    cons_ptr->cdr = cdr;
+    heap_ptr += sizeof(lsp_cons_t);
+
+    return expr_ptr;
+}
 
 lsp_expr_t *lsp_car(lsp_expr_t *expr) {
     if (lsp_type(expr) != LSP_CONS) {
@@ -174,6 +165,33 @@ void lsp_set_cdr(lsp_expr_t *expr, lsp_expr_t *new_cdr) {
     cons->cdr = new_cdr;
 }
 
+
+/**
+ * Functions for working with expressions representing built-in operations.
+ */
+lsp_expr_t *lsp_op(lsp_op_t op) {
+    lsp_expr_t *expr_ptr = heap_ptr;
+
+    lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
+    *type_ptr = LSP_OP;
+    heap_ptr += sizeof(lsp_type_t);
+
+    lsp_op_t *op_ptr = (lsp_op_t *) heap_ptr;
+    *op_ptr = op;
+    heap_ptr += sizeof(lsp_op_t);
+
+    return expr_ptr;
+}
+
+lsp_op_t *lsp_as_op(lsp_expr_t *expr) {
+    assert(lsp_type(expr) == LSP_OP);
+    return (lsp_op_t *) lsp_data(expr);
+}
+
+
+/**
+ * Miscellaneous helpers.
+ */
 lsp_expr_t *lsp_reverse(lsp_expr_t *input) {
     lsp_expr_t *output = NULL;
     while (lsp_type(input) == LSP_CONS) {
