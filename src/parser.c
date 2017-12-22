@@ -121,17 +121,12 @@ lsp_expr_t *lsp_parse() {
         // Parse the next expression and save it in the current environment. 
         lsp_expr_t *expression;
 
-        if (next == ')' || next == '\0') {
+        if (next == '\0') {
+            return lsp_reverse(body);
+        } else if (next == ')') {
             // Unwind and reverse the current body list and store it as the
             // current expression.
-            while (lsp_type(body) == LSP_CONS) {
-                expression = lsp_cons(lsp_car(body), expression);
-                body = lsp_cdr(body);
-            }
-
-            if (next == '\0') {
-                return expression;
-            }
+            expression = lsp_reverse(body);
 
             // Pop the containing body from the stack and set it as current.
             body = lsp_car(stack);
