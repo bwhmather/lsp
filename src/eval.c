@@ -4,15 +4,17 @@
 #include <assert.h>
 
 
+static void lsp_define(char *sym, lsp_expr_t *val, lsp_expr_t *env) {
+    lsp_set_car(env, lsp_cons(lsp_cons(lsp_symbol(sym), val), lsp_car(env)));
+}
+
+
 static lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env) {
     // Try to find symbol in local scope.
     lsp_expr_t *scope = lsp_car(env);
 
     while (lsp_type(scope) == LSP_CONS) {
-        if (strcmp(
-            lsp_as_sym(lsp_car(lsp_car(scope))),
-            lsp_as_sym(sym)
-        ) == 0) {
+        if (strcmp(lsp_as_sym(lsp_car(lsp_car(scope))), sym) == 0) {
             return lsp_cdr(lsp_car(scope));
         }
         scope = lsp_cdr(scope);
@@ -24,11 +26,31 @@ static lsp_expr_t *lsp_lookup(char *sym, lsp_expr_t *env) {
 }
 
 
+static void lsp_set(char *sym, lsp_expr_t *val, lsp_expr_t *env) {
+    assert(env != NULL);
+
+    // Try to find symbol in local scope.
+    lsp_expr_t *scope = lsp_car(env);
+
+    while (lsp_type(scope) == LSP_CONS) {
+        if (strcmp(lsp_as_sym(lsp_car(lsp_car(scope))), sym) == 0) {
+            lsp_set_cdr(lsp_car(scope), val);
+            return;
+        }
+        scope = lsp_cdr(scope);
+    }
+
+    // Fallback to attempting to set the value in the parent scope.
+    lsp_expr_t *parent_scope = lsp_cdr(env);
+    lsp_set(sym, val, parent_scope);
+}
+
+
 lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
     if (lsp_type(expr) == LSP_SYM) {
         // Expression is a name identifying a variable that can be loaded
         // from the environment.
-        return lsp_lookup(expr, env);
+        return lsp_lookup(lsp_as_sym(expr), env);
 
     } else if (lsp_type(expr) == LSP_CONS) {
         // Expression is a list representing either a special form or an
@@ -57,13 +79,26 @@ lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
                 return lsp_car(lsp_cdr(expr));
             }
             if (strcmp(sym, "define") == 0) {
-                assert(false);
+                lsp_define(lsp_as_sym(lsp_caar(expr)), lsp_caaar(expr), env);
+                return NULL;
             }
             if (strcmp(sym, "set!") == 0) {
-                assert(false);
+                lsp_set(lsp_as_sym(lsp_caar(expr)), lsp_caaar(expr), env);
+                return NULL;
             }
             if (strcmp(sym, "lambda") == 0) {
                 assert(false);
+            }
+            if (strcmp(sym, "begin") == 0) {
+                lsp_expr_t *result = NULL;
+                for (
+                    lsp_expr_t *statements = lsp_cdr(expr);
+                    statements != NULL;
+                    statements = lsp_cdr(statements)
+                ) {
+                    result = lsp_eval(lsp_car(statements), env);
+                }
+                return result;
             }
         }
 
