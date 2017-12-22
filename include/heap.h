@@ -18,6 +18,7 @@ void lsp_heap_init();
 
 lsp_type_t lsp_type(lsp_expr_t *expr);
 
+void lsp_assert_type(lsp_expr_t *expr, lsp_type_t type);
 
 /**
  * Functions for working with integer objects.

@@ -34,6 +34,14 @@ static char *lsp_data(lsp_expr_t *expr) {
 }
 
 
+void lsp_assert_type(lsp_expr_t *expr, lsp_type_t type) {
+    if (lsp_type(expr) != type) {
+        lsp_print(expr);
+        abort();
+    }
+}
+
+
 /**
  * Functions for working with integer objects.
  */
@@ -114,9 +122,7 @@ lsp_expr_t *lsp_cons(lsp_expr_t *car, lsp_expr_t *cdr) {
 }
 
 lsp_expr_t *lsp_car(lsp_expr_t *expr) {
-    if (lsp_type(expr) != LSP_CONS) {
-        assert(false);
-    }
+    lsp_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
 
     return cons->car;
@@ -131,9 +137,7 @@ lsp_expr_t *lsp_caaar(lsp_expr_t *expr) {
 }
 
 lsp_expr_t *lsp_cdr(lsp_expr_t *expr) {
-    if (lsp_type(expr) != LSP_CONS) {
-        assert(false);
-    }
+    lsp_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
 
     return cons->cdr;
@@ -148,18 +152,14 @@ lsp_expr_t *lsp_cdddr(lsp_expr_t *expr) {
 }
 
 void lsp_set_car(lsp_expr_t *expr, lsp_expr_t *new_car) {
-    if (lsp_type(expr) != LSP_CONS) {
-        assert(false);
-    }
+    lsp_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
 
     cons->car = new_car;
 }
 
 void lsp_set_cdr(lsp_expr_t *expr, lsp_expr_t *new_cdr) {
-    if (lsp_type(expr) != LSP_CONS) {
-        assert(false);
-    }
+    lsp_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_data(expr);
 
     cons->cdr = new_cdr;
