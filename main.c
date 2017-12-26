@@ -11,6 +11,9 @@
 
 
 int main(int argc, char **argv) {
+    (void) argc;
+    (void) argv;
+
     lsp_heap_init();
     lsp_expr_t *ast = lsp_parse();
     lsp_expr_t *result = lsp_eval(lsp_car(ast), lsp_default_env());
