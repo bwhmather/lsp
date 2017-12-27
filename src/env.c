@@ -5,6 +5,16 @@
 #include <string.h>
 
 
+lsp_expr_t *lsp_empty_env() {
+    return lsp_cons(NULL, NULL);
+}
+
+
+lsp_expr_t *lsp_push_scope(lsp_expr_t *env) {
+    return lsp_cons(NULL, env);
+}
+
+
 void lsp_define(char *sym, lsp_expr_t *val, lsp_expr_t *env) {
     lsp_set_car(env, lsp_cons(lsp_cons(lsp_symbol(sym), val), lsp_car(env)));
 }
@@ -45,5 +55,4 @@ void lsp_set(char *sym, lsp_expr_t *val, lsp_expr_t *env) {
     lsp_expr_t *parent_scope = lsp_cdr(env);
     lsp_set(sym, val, parent_scope);
 }
-
 
