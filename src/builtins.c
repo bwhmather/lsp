@@ -1,6 +1,7 @@
 #include "builtins.h"
 
 #include "heap.h"
+#include "env.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -60,31 +61,19 @@ static lsp_expr_t *lsp_op_set_cdr(lsp_expr_t *args) {
     return NULL;
 }
 
+
 lsp_expr_t *lsp_default_env() {
-    lsp_expr_t *scope = NULL;
+    lsp_expr_t *env = lsp_empty_env();
 
-    scope = lsp_cons(lsp_cons(lsp_symbol("+"), lsp_op(&lsp_op_add)), scope);
-    scope = lsp_cons(lsp_cons(lsp_symbol("-"), lsp_op(&lsp_op_sub)), scope);
-    scope = lsp_cons(lsp_cons(lsp_symbol("*"), lsp_op(&lsp_op_mul)), scope);
-    scope = lsp_cons(lsp_cons(lsp_symbol("/"), lsp_op(&lsp_op_div)), scope);
-
-    scope = lsp_cons(lsp_cons(
-        lsp_symbol("cons"), lsp_op(&lsp_op_cons)
-    ), scope);
-
-    scope = lsp_cons(lsp_cons(lsp_symbol("car"), lsp_op(&lsp_op_car)), scope);
-    scope = lsp_cons(lsp_cons(
-        lsp_symbol("set-car!"), lsp_op(&lsp_op_set_car)
-    ), scope);
-
-    scope = lsp_cons(lsp_cons(lsp_symbol("cdr"), lsp_op(&lsp_op_cdr)), scope);
-    scope = lsp_cons(lsp_cons(
-        lsp_symbol("set-cdr!"), lsp_op(&lsp_op_set_cdr)
-    ), scope);
-
-    lsp_expr_t *parent = NULL;
-
-    lsp_expr_t *env = lsp_cons(scope, parent);
+    lsp_define("+", lsp_op(&lsp_op_add), env);
+    lsp_define("-", lsp_op(&lsp_op_sub), env);
+    lsp_define("*", lsp_op(&lsp_op_mul), env);
+    lsp_define("/", lsp_op(&lsp_op_div), env);
+    lsp_define("cons", lsp_op(&lsp_op_cons), env);
+    lsp_define("car", lsp_op(&lsp_op_car), env);
+    lsp_define("set-car!", lsp_op(&lsp_op_set_car), env);
+    lsp_define("cdr", lsp_op(&lsp_op_cdr), env);
+    lsp_define("set-cdr!", lsp_op(&lsp_op_set_cdr), env);
 
     return env;
 }
