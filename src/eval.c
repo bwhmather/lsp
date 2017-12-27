@@ -86,25 +86,25 @@ lsp_expr_t *lsp_eval(lsp_expr_t *expr, lsp_expr_t *env) {
             lsp_op_t op = *lsp_as_op(callable);
             return op(args);
         } else if (lsp_type(callable) == LSP_CONS) {
+            // Break the callable up into its component pieces.
             lsp_expr_t *function = lsp_car(callable);
             lsp_expr_t *arg_spec = lsp_car(function);
             lsp_expr_t *body = lsp_cdr(function);
+            lsp_expr_t *closure = lsp_cdr(callable);
 
-            lsp_expr_t *bindings = NULL;
+            // Bind function arguments to a new environment.
+            lsp_expr_t *function_env = lsp_push_scope(closure);
             while (lsp_type(arg_spec) == LSP_CONS) {
-                bindings = lsp_cons(
-                    lsp_cons(lsp_car(arg_spec), lsp_car(args)),
-                    bindings
+                lsp_define(
+                    lsp_as_sym(lsp_car(arg_spec)),
+                    lsp_car(args),
+                    function_env
                 );
                 arg_spec = lsp_cdr(arg_spec);
                 args = lsp_cdr(args);
             }
-            bindings = lsp_reverse(bindings);
 
-            lsp_expr_t *closure = lsp_cdr(callable);
-
-            lsp_expr_t *function_env = lsp_cons(bindings, closure);
-
+            // Evaluate the function.
             lsp_expr_t * result = lsp_eval(body, function_env);
 
             return result;
