@@ -7,30 +7,41 @@
 #include <assert.h>
 
 
-static lsp_expr_t *lsp_op_add(lsp_expr_t *args) {
-    int a = *lsp_as_int(lsp_car(args));
-    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
-    return lsp_int(a + b);
+static void lsp_op_add() {
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_remove(0);
+    lsp_push_int(a + b);
 }
 
-static lsp_expr_t *lsp_op_sub(lsp_expr_t *args) {
-    int a = *lsp_as_int(lsp_car(args));
-    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
-    return lsp_int(a - b);
+static void lsp_op_sub() {
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_remove(0);
+    lsp_push_int(a - b);
 }
 
-static lsp_expr_t *lsp_op_mul(lsp_expr_t *args) {
-    int a = *lsp_as_int(lsp_car(args));
-    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
-    return lsp_int(a * b);
+static void lsp_op_mul() {
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_remove(0);
+    lsp_push_int(a * b);
 }
 
-static lsp_expr_t *lsp_op_div(lsp_expr_t *args) {
-    int a = *lsp_as_int(lsp_car(args));
-    int b = *lsp_as_int(lsp_car(lsp_cdr(args)));
-    return lsp_int(a / b);
+static void lsp_op_div() {
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_remove(0);
+    lsp_push_int(a / b);
 }
 
+static void lsp_op_cons() {
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_remove(0);
+    lsp_push_int(a / b);
+    lsp_push_cons()
+}
 static lsp_expr_t *lsp_op_cons(lsp_expr_t *args) {
     lsp_expr_t *car = lsp_car(args);
     lsp_expr_t *cdr = lsp_caar(args);
