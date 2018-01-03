@@ -1,6 +1,7 @@
 #pragma once
 
-typedef offset_t lsp_offset_t;
+#include <stdbool.h>
+
 
 void lsp_push_null();
 void lsp_push_cons();
@@ -21,11 +22,9 @@ void lsp_set_cdr();
 
 void lsp_dup(int offset);
 void lsp_store(int offset);
-void lsp_pop();
+void lsp_pop();  // helper
 void lsp_pop_to(int offset);
-
-void lsp_del(int offset);
-void lsp_swp(int offset);
+void lsp_swp(int offset);  // helper
 
 void lsp_call(int nargs);
 

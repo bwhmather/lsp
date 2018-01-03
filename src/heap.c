@@ -6,8 +6,8 @@
 #include <assert.h>
 
 typedef struct lsp_cons_t {
-    lsp_expr_t *car;
-    lsp_expr_t *cdr;
+    lsp_value_t *car;
+    lsp_value_t *cdr;
 } lsp_cons_t;
 
 
@@ -21,7 +21,7 @@ void lsp_heap_init() {
 }
 
 
-lsp_type_t lsp_type(lsp_expr_t *expr) {
+lsp_type_t lsp_type(lsp_value_t *expr) {
     if (expr == NULL) {
         return LSP_NULL;
     }
@@ -29,12 +29,12 @@ lsp_type_t lsp_type(lsp_expr_t *expr) {
     return *type_ptr;
 }
 
-static char *lsp_heap_data(lsp_expr_t *expr) {
+static char *lsp_heap_data(lsp_value_t *expr) {
     return (char *) expr + sizeof(lsp_type_t);
 }
 
 
-void lsp_heap_assert_type(lsp_expr_t *expr, lsp_type_t type) {
+void lsp_heap_assert_type(lsp_value_t *expr, lsp_type_t type) {
     if (lsp_heap_type(expr) != type) {
         lsp_heap_print(expr);
         abort();
@@ -45,8 +45,8 @@ void lsp_heap_assert_type(lsp_expr_t *expr, lsp_type_t type) {
 /**
  * Functions for working with integer objects.
  */
-lsp_expr_t *lsp_heap_int(int value) {
-    lsp_expr_t *expr_ptr = heap_ptr;
+lsp_value_t *lsp_heap_int(int value) {
+    lsp_value_t *expr_ptr = heap_ptr;
 
     lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
     *type_ptr = LSP_INT;
@@ -59,7 +59,7 @@ lsp_expr_t *lsp_heap_int(int value) {
     return expr_ptr;
 }
 
-int *lsp_heap_as_int(lsp_expr_t *expr) {
+int *lsp_heap_as_int(lsp_value_t *expr) {
     assert(lsp_heap_type(expr) == LSP_INT);
     return (int *) lsp_heap_data(expr);
 }
@@ -68,8 +68,8 @@ int *lsp_heap_as_int(lsp_expr_t *expr) {
 /**
  * Functions for working with symbols.
  */
-lsp_expr_t *lsp_heap_symbol_start() {
-    lsp_expr_t *expr_ptr = heap_ptr;
+lsp_value_t *lsp_heap_symbol_start() {
+    lsp_value_t *expr_ptr = heap_ptr;
 
     lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
     *type_ptr = LSP_SYM;
@@ -87,8 +87,8 @@ void lsp_heap_symbol_stop() {
     lsp_heap_symbol_push('\0');
 }
 
-lsp_expr_t *lsp_heap_symbol(char *name) {
-    lsp_expr_t *expr = lsp_heap_symbol_start();
+lsp_value_t *lsp_heap_symbol(char *name) {
+    lsp_value_t *expr = lsp_heap_symbol_start();
 
     for (int cursor=0; name[cursor] != '\0'; cursor++) {
         lsp_heap_symbol_push(name[cursor]);
@@ -97,7 +97,7 @@ lsp_expr_t *lsp_heap_symbol(char *name) {
     return expr;
 }
 
-char *lsp_heap_as_sym(lsp_expr_t *expr) {
+char *lsp_heap_as_sym(lsp_value_t *expr) {
     assert(lsp_heap_type(expr) == LSP_SYM);
     return (char *) lsp_heap_data(expr);
 }
@@ -106,8 +106,8 @@ char *lsp_heap_as_sym(lsp_expr_t *expr) {
 /**
  * Functions for working with cons cells.
  */
-lsp_expr_t *lsp_heap_cons(lsp_expr_t *car, lsp_expr_t *cdr) {
-    lsp_expr_t *expr_ptr = (lsp_expr_t *) heap_ptr;
+lsp_value_t *lsp_heap_cons(lsp_value_t *car, lsp_value_t *cdr) {
+    lsp_value_t *expr_ptr = (lsp_value_t *) heap_ptr;
 
     lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
     *type_ptr = LSP_CONS;
@@ -121,28 +121,28 @@ lsp_expr_t *lsp_heap_cons(lsp_expr_t *car, lsp_expr_t *cdr) {
     return expr_ptr;
 }
 
-lsp_expr_t *lsp_heap_car(lsp_expr_t *expr) {
+lsp_value_t *lsp_heap_car(lsp_value_t *expr) {
     lsp_heap_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_heap_data(expr);
 
     return cons->car;
 }
 
-lsp_expr_t *lsp_heap_cdr(lsp_expr_t *expr) {
+lsp_value_t *lsp_heap_cdr(lsp_value_t *expr) {
     lsp_heap_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_heap_data(expr);
 
     return cons->cdr;
 }
 
-void lsp_heap_set_car(lsp_expr_t *expr, lsp_expr_t *new_car) {
+void lsp_heap_set_car(lsp_value_t *expr, lsp_value_t *new_car) {
     lsp_heap_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_heap_data(expr);
 
     cons->car = new_car;
 }
 
-void lsp_heap_set_cdr(lsp_expr_t *expr, lsp_expr_t *new_cdr) {
+void lsp_heap_set_cdr(lsp_value_t *expr, lsp_value_t *new_cdr) {
     lsp_heap_assert_type(expr, LSP_CONS);
     lsp_cons_t *cons = (lsp_cons_t *) lsp_heap_data(expr);
 
@@ -153,8 +153,8 @@ void lsp_heap_set_cdr(lsp_expr_t *expr, lsp_expr_t *new_cdr) {
 /**
  * Functions for working with expressions representing built-in operations.
  */
-lsp_expr_t *lsp_heap_op(lsp_op_t op) {
-    lsp_expr_t *expr_ptr = heap_ptr;
+lsp_value_t *lsp_heap_op(lsp_op_t op) {
+    lsp_value_t *expr_ptr = heap_ptr;
 
     lsp_type_t *type_ptr = (lsp_type_t *) heap_ptr;
     *type_ptr = LSP_OP;
@@ -167,7 +167,7 @@ lsp_expr_t *lsp_heap_op(lsp_op_t op) {
     return expr_ptr;
 }
 
-lsp_op_t *lsp_heap_as_op(lsp_expr_t *expr) {
+lsp_op_t *lsp_heap_as_op(lsp_value_t *expr) {
     assert(lsp_heap_type(expr) == LSP_OP);
     return (lsp_op_t *) lsp_heap_data(expr);
 }
@@ -176,7 +176,7 @@ lsp_op_t *lsp_heap_as_op(lsp_expr_t *expr) {
 /**
  * Miscellaneous helpers.
  */
-bool lsp_heap_is_truthy(lsp_expr_t *expr) {
+bool lsp_heap_is_truthy(lsp_value_t *expr) {
     if (lsp_heap_type(expr) == LSP_INT) {
         return *lsp_heap_as_int(expr) != 0;
     } else if (lsp_heap_type(expr) == LSP_NULL) {
@@ -187,7 +187,7 @@ bool lsp_heap_is_truthy(lsp_expr_t *expr) {
 }
 
 
-void lsp_heap_print(lsp_expr_t *expr) {
+void lsp_heap_print(lsp_value_t *expr) {
     switch (lsp_heap_type(expr)) {
         case LSP_NULL:
             printf("()");

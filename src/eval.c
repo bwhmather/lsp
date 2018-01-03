@@ -1,6 +1,6 @@
 #include "eval.h"
 
-#include "heap.h"
+#include "stack.h"
 #include "env.h"
 
 #include <string.h>
@@ -27,17 +27,16 @@ void lsp_op_eval() {
     int env = 0;
     int expr = 1;
 
-    if (lsp_type(expr) == LSP_SYM) {
+    if (lsp_dup(-1), lsp_is_symbol()) {
         // Expression is a name identifying a variable that can be loaded
         // from the environment.  `lookup` will po the environment and symbol
         // from the stack and replace them with the correct value.
         lsp_lookup();
-        return
-
-    } else if (lsp_type(expr) == LSP_CONS) {
+        return;
+    } else if (lsp_dup(-1), lsp_is_cons()) {
         // Expression is a list representing either a special form or an
         // invocation of a procedure or built-in operator.
-        if (lsp_type(lsp_car(expr)) == LSP_SYM) {
+        if (lsp_dup(-1), lsp_is_symbol()) {
             char *sym = lsp_as_sym(lsp_car(expr));
             if (strcmp(sym, "if") == 0) {
                 // Strip the `if`.
@@ -68,7 +67,6 @@ void lsp_op_eval() {
                 lsp_store(0);
                 lsp_pop_to(1);
                 return;
-
             }
             if (strcmp(sym, "quote") == 0) {
                 // Strip the `quote`.
@@ -99,7 +97,7 @@ void lsp_op_eval() {
 
                 // Evaluate the value.
                 lsp_dup(0);  // The environment.
-                lsp_swp();  // Swap the environment and value expression.
+                lsp_swp(-1);  // Swap the environment and value expression.
                 lsp_eval();
 
                 // Bind the evaluated value to the key.
@@ -123,7 +121,7 @@ void lsp_op_eval() {
 
                 // Evaluate the value.
                 lsp_dup(0);  // The environment.
-                lsp_swp();  // Swap the environment and value expression.
+                lsp_swp(-1);  // Swap the environment and value expression.
                 lsp_eval();
 
                 // Bind the evaluated value to the key.
@@ -173,7 +171,7 @@ void lsp_op_eval() {
                     }
 
                     // Discard the previous result.
-                    lsp_pop(3);
+                    lsp_pop_to(3);
 
                     // Evaluate the next expression in the list.
                     lsp_dup(0);  // The environment.
