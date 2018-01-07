@@ -5,14 +5,37 @@
 #include <string.h>
 #include <assert.h>
 
+/**
+ * An offset into the heap array.
+ *
+ * Used to represent a reference to an object stored on the heap.
+ */
+typedef uint32_t lsp_heap_ref_t;
+
+typedef struct lsp_heap_meta_t {
+    bool is_pointer : 1;
+    bool is_continuation : 1;
+    unsigned int type : 6;
+} lsp_heap_meta_t;
+
+
+typedef struct lsp_heap_block_t {
+    char data[8];
+}
+
+static lsp_heap_block_t heap_data[];
+static lsp_heap_meta_t heap_metadata[];
+static lsp_heap_ref_t heap_cursor;
+
+static lsp_heap_ref_t heap_mark_stack[];
+static uint64_t heap_mark_bitset;
+static lsp_heap_ref_t heap_offset_cache[];
+
+
 typedef struct lsp_cons_t {
     lsp_value_t *car;
     lsp_value_t *cdr;
 } lsp_cons_t;
-
-
-static char *heap_data;
-static char *heap_ptr;
 
 
 void lsp_heap_init() {

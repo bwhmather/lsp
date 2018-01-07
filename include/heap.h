@@ -10,6 +10,14 @@ typedef enum lsp_type_t {
     LSP_OP,
 } lsp_type_t;
 
+
+/**
+ * An offset into the heap array.
+ *
+ * Used to represent a reference to an object stored on the heap.
+ */
+typedef uint32_t lsp_heap_ref_t;
+
 typedef void lsp_value_t;
 
 typedef lsp_value_t *(* lsp_op_t)(lsp_value_t *);
