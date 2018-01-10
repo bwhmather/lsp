@@ -24,7 +24,29 @@ typedef lsp_value_t *(* lsp_op_t)(lsp_value_t *);
 
 void lsp_heap_init();
 
-lsp_type_t lsp_heap_type(lsp_value_t *expr);
+/**
+ * Returns the type of the object stored at offset `ref`.
+ *
+ * Will abort if `ref` does not point to the start of an object on the heap.
+ */
+unsigned int lsp_heap_type(lsp_heap_ref_t ref);
+
+/**
+ * Returns a pointer to area of memory allocated on the heap for the object
+ * stored at offset `ref`.
+ */
+char *lsp_heap_data(lsp_heap_ref_t ref);
+
+
+
+
+
+
+
+
+
+
+
 
 void lsp_assert_type(lsp_value_t *expr, lsp_type_t type);
 

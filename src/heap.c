@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
+
 /**
  * An offset into the heap array.
  *
@@ -12,6 +13,10 @@
  */
 typedef uint32_t lsp_heap_ref_t;
 
+
+/**
+ * Structure for storing metadata related to a block.
+ */
 typedef struct lsp_heap_meta_t {
     bool is_pointer : 1;
     bool is_continuation : 1;
@@ -19,6 +24,10 @@ typedef struct lsp_heap_meta_t {
 } lsp_heap_meta_t;
 
 
+/**
+ * Structure representing the smallest unit of memory that can be allocated on
+ * the heap.
+ */
 typedef struct lsp_heap_block_t {
     char data[8];
 }
@@ -27,9 +36,123 @@ static lsp_heap_block_t heap_data[];
 static lsp_heap_meta_t heap_metadata[];
 static lsp_heap_ref_t heap_cursor;
 
+static lsp_heap_ref_t stack[];
+
 static lsp_heap_ref_t heap_mark_stack[];
 static uint64_t heap_mark_bitset;
 static lsp_heap_ref_t heap_offset_cache[];
+
+
+
+/**
+ * Internal functions for garbage collection.
+ */
+static void lsp_gc_mark_heap() {
+    // TODO
+}
+
+static void lsp_gc_update_offset_cache() {
+    // TODO
+}
+
+static void lsp_gc_compact() {
+    // TODO
+}
+
+static void lsp_gc_update_stack() {
+    // TODO
+}
+
+static void lsp_gc() {
+    lsp_gc_mark_heap();
+    lsp_gc_rebuild_offset_cache();
+    lsp_gc_compact();
+    lsp_gc_update_stack();
+}
+
+
+/**
+ * Aborts the program if `ref` does not point to the start of a valid object
+ * on the heap.
+ */
+static void lsp_check_ref(lsp_heap_ref_t ref) {
+    assert(ref >= heap_cursor);
+    assert(!lsp_heap_is_continuation(ref));
+}
+
+/**
+ * Returns the type of the object stored at offset `ref`.
+ *
+ * Will abort if `ref` does not point to the start of an object on the heap.
+ */
+static lsp_type_t lsp_heap_type(lsp_heap_ref_t ref) {
+    lsp_check_ref(ref);
+    return (lsp_type_t)heap_metadata[ref].type;
+}
+
+/**
+ * Returns a pointer to area of memory allocated on the heap for the object
+ * stored at offset `ref`.
+ */
+static char *lsp_heap_data(lsp_heap_ref_t ref) {
+    lsp_check_ref(ref);
+    return (char *)(&heap_data[ref]);
+}
+
+/**
+ * Allocates a contiguous area of memory for an object.
+ *
+ * Currently all blocks making up an object must be marked with the same type,
+ * and must all be pointers or all be literals values.
+ *
+ * All bytes within the allocated area of memory will be initialised to zero.
+ *
+ * .. warning::
+ *     Allocation may trigger a garbage collection cycle.  All non-stack
+ *     references to objects stored on the heap should be released before
+ *     calling this function.
+ */
+static lsp_heap_ref_t lsp_heap_allocate(
+    unsigned int size, unsigned int type, bool is_pointer,
+) {
+    // Figure out how many blocks we need to claim to be able to fit the
+    // requested number of bytes.
+    unsigned int num_blocks = size / sizeof(lsp_heap_block_t);
+    if (size % sizeof(lsp_heap_block_t)) {
+        num_blocks += 1;
+    }
+
+    // TODO check available space and possibly trigger garbage collection.
+
+    // Zero out allocated data.
+    memset(
+        (char *)&heap_data[heap_cursor],
+        0, num_blocks * sizeof(lsp_heap_block_t)
+    );
+
+    // Write metadata for header block.
+    heap_metadata[heap_cursor].is_pointer = is_pointer;
+    heap_metadata[heap_cursor].is_continuation = false;
+    heap_metadata[heap_cursor].type = type;
+
+    // Write metadata for each of the allocated blocks.
+    for (int i = 1; i < num_blocks; i++) {
+        heap_metadata[heap_cursor + i].is_pointer = is_pointer;
+        heap_metadata[heap_cursor + i].is_continuation = true;
+        heap_metadata[heap_cursor + i].type = type;
+    }
+
+    // Update cursor.
+    lsp_heap_ref_t ref = heap_cursor;
+    cursor += num_blocks;
+
+    return ref;
+}
+
+
+
+
+
 
 
 typedef struct lsp_cons_t {
