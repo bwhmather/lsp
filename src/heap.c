@@ -37,6 +37,8 @@ static lsp_heap_meta_t heap_metadata[];
 static lsp_heap_ref_t heap_cursor;
 
 static lsp_heap_ref_t stack[];
+static lsp_heap_ref_t *frame_ptr;
+static lsp_heap_ref_t *stack_ptr;
 
 static lsp_heap_ref_t heap_mark_stack[];
 static uint64_t heap_mark_bitset;
@@ -85,8 +87,7 @@ static void lsp_check_ref(lsp_heap_ref_t ref) {
  *
  * Will abort if `ref` does not point to the start of an object on the heap.
  */
-static lsp_type_t lsp_heap_type(lsp_heap_ref_t ref) {
-    lsp_check_ref(ref);
+unsigned int lsp_heap_type(int offset) {
     return (lsp_type_t)heap_metadata[ref].type;
 }
 
@@ -94,8 +95,7 @@ static lsp_type_t lsp_heap_type(lsp_heap_ref_t ref) {
  * Returns a pointer to area of memory allocated on the heap for the object
  * stored at offset `ref`.
  */
-static char *lsp_heap_data(lsp_heap_ref_t ref) {
-    lsp_check_ref(ref);
+char *lsp_heap_data(int offset) {
     return (char *)(&heap_data[ref]);
 }
 
@@ -112,7 +112,7 @@ static char *lsp_heap_data(lsp_heap_ref_t ref) {
  *     references to objects stored on the heap should be released before
  *     calling this function.
  */
-static lsp_heap_ref_t lsp_heap_allocate(
+void lsp_heap_allocate(
     unsigned int size, unsigned int type, bool is_pointer,
 ) {
     // Figure out how many blocks we need to claim to be able to fit the
@@ -142,15 +142,41 @@ static lsp_heap_ref_t lsp_heap_allocate(
         heap_metadata[heap_cursor + i].type = type;
     }
 
-    // Update cursor.
-    lsp_heap_ref_t ref = heap_cursor;
-    cursor += num_blocks;
+    lsp_heap_ ref = heap_cursor;
 
-    return ref;
+    // Update cursor.
+    heap_cursor += num_blocks;
 }
 
 
 
+
+
+
+void lsp_dup(int offset) {
+    lsp_value_t *value = lsp_get_at_offset(offset);
+    lsp_push_expr(value);
+}
+
+void lsp_store(int offset) {
+    lsp_value_t *value = lsp_get_at_offset(-1);
+    lsp_put_at_offset(value, offset);
+    lsp_pop_to(-1);
+}
+
+void lsp_pop_to(int offset) {
+    lsp_value_t **tgt = offset < 0 ? stack_ptr + offset : frame_ptr + offset;
+    assert(tgt >= frame_ptr && tgt < stack_ptr);
+    stack_ptr = tgt;
+}
+
+void lsp_swp(int offset) {
+    lsp_value_t *tgt = lsp_get_at_offset(offset);
+    lsp_value_t *top = lsp_get_at_offset(-1);
+
+    lsp_put_at_offset(top, offset);
+    lsp_put_at_offset(tgt, -1);
+}
 
 
 
