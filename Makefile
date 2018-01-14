@@ -14,11 +14,15 @@ CFLAGS += -Wall -Wextra -pedantic
 
 # Debug specific flags.
 CFLAGS_DBG := $(CFLAGS)
-CFLAGS_DGB += -O1
+CFLAGS_DBG += -O1
 CFLAGS_DBG += -g
 
 # Production specific flags.
 CFLAGS += -O3
+
+ifdef DEBUG
+CFLAGS := $(CFLAGS_DBG)
+endif
 
 
 ## Filenames.
@@ -32,9 +36,6 @@ EXECUTABLE := $(PROJECT)
 
 ## Build rules.
 all: $(EXECUTABLE)
-
-devel: CFLAGS := $(CFLAGS_DBG)
-devel: all
 
 $(EXECUTABLE): $(OBJECTS) main.c
 	$(CC) $(CFLAGS) $(LD_FLAGS) $(OBJECTS) $(LIBS) -o $@ main.c
