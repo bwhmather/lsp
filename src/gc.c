@@ -64,7 +64,7 @@ static void lsp_gc_internal_update_stack() {
     // TODO
 }
 
-static void lsp_gc_collect() {
+void lsp_gc_collect() {
     lsp_gc_internal_mark_heap();
     lsp_gc_internal_rebuild_offset_cache();
     lsp_gc_internal_compact();

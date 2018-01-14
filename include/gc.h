@@ -49,4 +49,4 @@ char *lsp_gc_data(int offset);
  * All non-stack references to objects stored on the heap should be released
  * before calling this function.
  */
-static void lsp_gc_collect();
+void lsp_gc_collect();
