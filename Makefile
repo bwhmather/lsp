@@ -4,6 +4,8 @@ VERSION :=0.0.1
 PREFIX ?=/usr/local
 CC ?=cc
 
+MAKEFLAGS += --no-builtin-rules
+
 
 ## Compiler options.
 CFLAGS += -std=c11
