@@ -4,10 +4,11 @@ VERSION :=0.0.1
 PREFIX ?=/usr/local
 CC ?=cc
 
+
 ## Compiler options.
 CFLAGS += -std=c11
-CFLAGS += -Wall -Wextra -pedantic
 CFLAGS += -Iinclude
+CFLAGS += -Wall -Wextra -pedantic
 
 # Debug specific flags.
 CFLAGS_DBG := $(CFLAGS)
@@ -19,9 +20,9 @@ CFLAGS += -O3
 
 
 ## Filenames.
-HEADERS := $(wildcard include/**/h include/*.h)
 SOURCES := $(wildcard src/**/*.c src/*.c)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
+DEPENDENCIES := $(patsubst src/%.c,build/%.d,$(SOURCES))
 SRC_DIRS := $(shell find src -type d)
 BUILD_DIRS := $(patsubst src%,build%,$(SRC_DIRS))
 EXECUTABLE := $(PROJECT)
@@ -36,10 +37,11 @@ devel: all
 $(EXECUTABLE): $(OBJECTS) main.c
 	$(CC) $(CFLAGS) $(LD_FLAGS) $(OBJECTS) $(LIBS) -o $@ main.c
 
-
-$(OBJECTS) : build/%.o : src/%.c $(HEADERS)
+$(OBJECTS) : build/%.o : src/%.c
 	@mkdir -p $(BUILD_DIRS)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -MMD
+
+-include ${DEPENDENCIES}
 
 
 ## Distribution
