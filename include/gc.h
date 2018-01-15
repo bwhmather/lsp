@@ -28,8 +28,8 @@ void lsp_gc_swp(int offset);
  *     references to objects stored on the heap should be released before
  *     calling this function.
  */
-int lsp_gc_allocate(
-    unsigned int size, unsigned int type, bool is_pointer,
+void lsp_gc_allocate(
+    unsigned int size, unsigned int type, bool is_pointer
 );
 
 /**
