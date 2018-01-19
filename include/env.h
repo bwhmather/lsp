@@ -1,6 +1,5 @@
 #pragma once
 
-#include "heap.h"
 
 void lsp_empty_env();
 void lsp_op_push_scope();
