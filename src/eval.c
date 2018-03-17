@@ -1,6 +1,6 @@
 #include "eval.h"
 
-#include "stack.h"
+#include "vm.h"
 #include "env.h"
 
 #include <string.h>

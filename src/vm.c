@@ -59,7 +59,7 @@ static char *data_heap_mark_bitset;
 static uint64_t *heap_offset_cache;
 
 
-void lsp_heap_init() {
+void lsp_vm_init() {
     // TODO This doesn't work if overcommit is disabled.
     // Block size times maximum index.
     heap_data = (lsp_heap_block_t *)malloc(8 * 4294967296);

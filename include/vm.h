@@ -2,51 +2,40 @@
 
 #include <stdbool.h>
 
+void lsp_vm_init();
 
-void lsp_heap_init();
+void lsp_push_null();
+void lsp_push_cons();
+void lsp_push_op(void (* value)());
+void lsp_push_int(int value);
+void lsp_push_symbol(char *value);
+void lsp_push_string(char *value);
 
-/**
- * Stack operations.
- */
-void lsp_gc_dup(int offset);
-void lsp_gc_store(int offset);
-void lsp_gc_pop_to(int offset);
-void lsp_gc_swp(int offset);
+int lsp_read_int();
+char *lsp_read_symbol();
+char *lsp_read_string();
 
-/**
- * Allocates a contiguous area of memory for an object.
- *
- * Currently all blocks making up an object must be marked with the same type,
- * and must all be pointers or all be literals values.
- *
- * All bytes within the allocated area of memory will be initialised to zero.
- *
- * Returns the frame offset of the reference to the object on the stack.
- *
- * .. warning::
- *     Allocation may trigger a garbage collection cycle.  All non-stack
- *     references to objects stored on the heap should be released before
- *     calling this function.
- */
-void lsp_gc_allocate(
-    unsigned int size, unsigned int type, bool is_pointer
-);
+void lsp_cons();  // helper
+void lsp_car();
+void lsp_cdr();
+void lsp_set_car();
+void lsp_set_cdr();
 
-/**
- * Returns the type of the object pointed to the stack entry at `offset`.
- */
-unsigned int lsp_gc_type(int offset);
+void lsp_dup(int offset);
+void lsp_store(int offset);
+void lsp_pop();  // helper
+void lsp_pop_to(int offset);
+void lsp_swp(int offset);  // helper
 
-/**
- * Returns a pointer to area of memory allocated on the heap for the object
- * pointed to by the stack entry at `offset`.
- */
-char *lsp_gc_data(int offset);
+void lsp_call(int nargs);
 
-/**
- * Force a garbage collection.
- *
- * All non-stack references to objects stored on the heap should be released
- * before calling this function.
- */
-void lsp_gc_collect();
+bool lsp_is_null();
+bool lsp_is_cons();
+bool lsp_is_op();
+bool lsp_is_int();
+bool lsp_is_symbol();
+bool lsp_is_string();
+
+bool lsp_is_truthy();
+bool lsp_is_equal();
+
