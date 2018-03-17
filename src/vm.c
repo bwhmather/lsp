@@ -1,4 +1,4 @@
-#include "gc.h"
+#include "vm.h"
 
 #include <stdlib.h>
 #include <stdio.h>
