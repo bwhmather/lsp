@@ -1,5 +1,8 @@
 #include "env.h"
 
+#include "vm.h"
+#include "interpreter.h"
+
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -8,7 +11,7 @@
 void lsp_empty_env() {
     lsp_push_null();
     lsp_push_null();
-    lsp_cons()
+    lsp_cons();
 }
 
 /**
@@ -21,7 +24,7 @@ void lsp_op_push_scope() {
 
     // Store it as the first entry in a pair containing a list of bindings as
     // its car, and a parent scope as its cdr.
-    lsp_rotate(0);
+    lsp_swp(-1);
     lsp_cons();
 }
 
@@ -44,7 +47,7 @@ void lsp_op_define() {
 
     // Read the inner most scope from the environment and store it behind the
     // cons cell for the new entry.
-    lsp_push(0);
+    lsp_dup(0);
     lsp_car();
 
     // Create a new scope with the new binding as its first entry.
@@ -67,44 +70,52 @@ void lsp_define() {
  */
 void lsp_op_lookup() {
     // Check that the current environment is not NULL.
-    lsp_push(0);
+    lsp_dup(0);
     if (lsp_is_null()) {
         lsp_abort("undefined variable");
     }
 
     // Extract the list of local bindings and save at the top of the stack.
-    lsp_push(0);
+    lsp_dup(0);
     lsp_car();
 
     // Search the list for the symbol.
-    while (lsp_is_type_nopop(LSP_CONS)) {
+    while (lsp_dup(-1), lsp_is_cons()) {
         // Read the symbol from the first entry.
-        lsp_push(-1);
-        lsp_car();
-        lsp_car();
+        lsp_dup(-1);
+        lsp_car();  // The first binding in the list.
+        lsp_car();  // The key for the binding.
+
+        // Copy the target symbol.
+        lsp_dup(1);
 
         // Compare it to the symbol we are interested in.
-        lsp_push(1);
-        if (lsp_is_eq()) {
+        char *target = lsp_read_symbol();
+        char *current = lsp_read_symbol();
+
+        if (strcmp(current, target) == 0) {
             // If equal then we have found what we are looking for.  Extract
             // the value from the corresponding entry in the scope and return
             // it.
-            lsp_car();
-            lsp_cdr();
-            lsp_replace(0);
-            lsp_pop(-1);
+            lsp_car();  // The first binding in the list.
+            lsp_cdr();  // The value from the binding.
 
+            lsp_store(0);
+            lsp_pop_to(1);
             return;
         }
+
+        // Advance to the next entry in the list.
+        lsp_cdr();
     }
 
     // Remove the empty inner scope from the stack.
-    lsp_pop(1);
+    lsp_pop_to(2);
 
     // Replace the current environment with the parent environment.
-    lsp_push(0);
+    lsp_dup(0);
     lsp_cdr();
-    lsp_replace(0);
+    lsp_store(0);
 
     // Search for the symbol in the parent environment.
     lsp_lookup();
@@ -123,22 +134,56 @@ void lsp_lookup() {
  *   - value
  */
 void lsp_op_set() {
-    assert(env != NULL);
-
-    // Try to find symbol in local scope.
-    lsp_expr_t *scope = lsp_car(env);
-
-    while (lsp_type(scope) == LSP_CONS) {
-        if (strcmp(lsp_as_sym(lsp_car(lsp_car(scope))), sym) == 0) {
-            lsp_set_cdr(lsp_car(scope), val);
-            return;
-        }
-        scope = lsp_cdr(scope);
+    lsp_dup(0);
+    if (lsp_is_null()) {
+        lsp_abort("undefined variable");
     }
 
-    // Fallback to attempting to set the value in the parent scope.
-    lsp_expr_t *parent_scope = lsp_cdr(env);
-    lsp_set(sym, val, parent_scope);
+    // Extract the list of local bindings and save it at the top of the stack.
+    lsp_dup(0);
+    lsp_car();
+
+    // Search the list for the symbol we want o edit.
+    while (lsp_dup(-1), lsp_is_cons()) {
+        // Read the symbol from the first entry.
+        lsp_dup(-1);
+        lsp_car();  // The first binding in the list.
+        lsp_car();  // The key for the binding.
+
+        // Copy the target symbol.
+        lsp_dup(1);
+
+        // Compare it to the symbol we are interested in.
+        char *target = lsp_read_symbol();
+        char *current = lsp_read_symbol();
+
+        if (strcmp(current, target) == 0) {
+            // Load a reference to the binding and replace its cdr with the new
+            // value.
+            lsp_car();
+            lsp_dup(2);
+
+            // Return null.
+            lsp_pop_to(0);
+            lsp_push_null();
+            return;
+        }
+
+        // Advance to the next entry in the list.
+        lsp_cdr();
+    }
+
+
+    // Remove the empty inner scope from the stack.
+    lsp_pop_to(3);
+
+    // Replace the current environment with the parent environment.
+    lsp_dup(0);
+    lsp_cdr();
+    lsp_store(0);
+
+    // Search for the symbol in the parent environment.
+    lsp_set();
 }
 
 
