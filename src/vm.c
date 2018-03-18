@@ -284,7 +284,6 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
     return ref;
 }
 
-
 /**
  * Stack operations.
  */
@@ -339,18 +338,17 @@ void lsp_push_cons() {
     lsp_push_ref(expr);
 }
 
-void lsp_push_op(void (* value)());
 void lsp_push_int(int value) {
     // Allocate space.
     lsp_ref_t ref = lsp_heap_alloc_data(LSP_TYPE_INT, sizeof(value));
 
     // Copy the value into the allocated space.
     char *data = lsp_heap_get_data(ref);
-    memcpy(data, &value, sizeof(int));
+    memcpy(data, &value, sizeof(value));
 
+    // Save the reference to the stack.
     lsp_push_ref(ref);
 }
-
 
 static void lsp_push_null_terminated(lsp_type_t type, char *value) {
     // Space required is equal to the length of the string plus one for the
@@ -365,6 +363,7 @@ static void lsp_push_null_terminated(lsp_type_t type, char *value) {
     char *data = lsp_heap_get_data(ref);
     memcpy(data, value, size);
 
+    // Save the reference to the stack.
     lsp_push_ref(ref);
 }
 
@@ -374,6 +373,18 @@ void lsp_push_symbol(char *value) {
 
 void lsp_push_string(char *value) {
     lsp_push_null_terminated(LSP_TYPE_STR, value);
+}
+
+void lsp_push_op(lsp_op_t op) {
+    // Allocate space.
+    lsp_ref_t ref = lsp_heap_alloc_data(LSP_TYPE_OP, sizeof(op));
+
+    // Copy the value into the allocated space.
+    char *data = lsp_heap_get_data(ref);
+    memcpy(data, &op, sizeof(op));
+
+    // Save the reference to the stack.
+    lsp_push_ref(ref);
 }
 
 int lsp_read_int() {
@@ -393,6 +404,13 @@ char *lsp_read_string() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
+}
+
+lsp_op_t lsp_read_op() {
+    lsp_ref_t ref = lsp_get_at_offset(-1);
+    assert(lsp_heap_get_type(ref) == LSP_TYPE_OP);
+    lsp_op_t *data = (lsp_op_t *) lsp_heap_get_data(ref);
+    return *data;
 }
 
 void lsp_cons() {
@@ -493,8 +511,6 @@ bool lsp_is_cons() {
     return lsp_heap_get_type(ref) == LSP_TYPE_CONS;
 }
 
-bool lsp_is_op();
-
 bool lsp_is_int() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     lsp_pop_to(-1);
@@ -511,6 +527,12 @@ bool lsp_is_string() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     lsp_pop_to(-1);
     return lsp_heap_get_type(ref) == LSP_TYPE_STR;
+}
+
+bool lsp_is_op() {
+    lsp_ref_t ref = lsp_get_at_offset(-1);
+    lsp_pop_to(-1);
+    return lsp_heap_get_type(ref) == LSP_TYPE_OP;
 }
 
 bool lsp_is_truthy() {

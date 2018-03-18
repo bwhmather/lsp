@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+typedef void (* lsp_op_t)(void);
+
 void lsp_vm_init();
 
 void lsp_push_null();
@@ -14,6 +16,7 @@ void lsp_push_string(char *value);
 int lsp_read_int();
 char *lsp_read_symbol();
 char *lsp_read_string();
+lsp_op_t lsp_read_op();
 
 void lsp_cons();  // helper
 void lsp_car();
@@ -32,10 +35,10 @@ void lsp_return(int nret);
 
 bool lsp_is_null();
 bool lsp_is_cons();
-bool lsp_is_op();
 bool lsp_is_int();
 bool lsp_is_symbol();
 bool lsp_is_string();
+bool lsp_is_op();
 
 bool lsp_is_truthy();
 bool lsp_is_equal();
