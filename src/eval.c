@@ -22,11 +22,55 @@ static void lsp_unpack(int n) {
     }
 }
 
+/**
+ * Calls the function at the top of the stack with the next `nargs` items as
+ * its arguments.
+ */
+void lsp_call(int nargs) {
+    if (lsp_dup(-1), lsp_is_op()) {
+        // Pop the operation from the top of the stack.
+        lsp_op_t op = lsp_read_op();
 
+        // Evaluate it and then pop everything but the return value.
+        lsp_enter_frame(nargs);
+        op();
+        lsp_exit_frame(1);
+        return;
+    }
+
+    if (lsp_dup(-1), lsp_is_cons()) {
+        assert(false);
+        // // Break the callable up into its component pieces.
+        // lsp_expr_t *function = lsp_car(callable);
+        // lsp_expr_t *arg_spec = lsp_car(function);
+        // lsp_expr_t *body = lsp_cdr(function);
+        // lsp_expr_t *closure = lsp_cdr(callable);
+
+        // // Bind function arguments to a new environment.
+        // lsp_expr_t *function_env = lsp_push_scope(closure);
+        // while (lsp_type(arg_spec) == LSP_CONS) {
+        //     lsp_define(
+        //         lsp_as_sym(lsp_car(arg_spec)),
+        //         lsp_car(args),
+        //         function_env
+        //     );
+        //     arg_spec = lsp_cdr(arg_spec);
+        //     args = lsp_cdr(args);
+        // }
+
+        // // Evaluate the function.
+        // lsp_expr_t * result = lsp_eval(body, function_env);
+    }
+
+    assert(false);
+}
+
+
+/**
+ * Evaluates the expression passed as its second argument in the environment
+ * passed as its first.
+ */
 void lsp_op_eval() {
-    int env = 0;
-    int expr = 1;
-
     if (lsp_dup(-1), lsp_is_symbol()) {
         // Expression is a name identifying a variable that can be loaded
         // from the environment.  `lookup` will po the environment and symbol
@@ -36,8 +80,18 @@ void lsp_op_eval() {
     } else if (lsp_dup(-1), lsp_is_cons()) {
         // Expression is a list representing either a special form or an
         // invocation of a procedure or built-in operator.
-        if (lsp_dup(-1), lsp_is_symbol()) {
-            char *sym = lsp_as_sym(lsp_car(expr));
+
+        // Unpack the first element from the list to check if it is a symbol.
+        lsp_dup(-1);
+        lsp_car();
+        if (lsp_is_symbol()) {
+            // The first item in the list is a symbol.  We first check if it
+            // represents a special form and if that doesn't work fall through
+            // to evaluating as an expression.
+
+            lsp_dup(-1);
+            lsp_car();
+            char *sym = lsp_read_sym();
             if (strcmp(sym, "if") == 0) {
                 // Strip the `if`.
                 lsp_cdr();
@@ -188,55 +242,38 @@ void lsp_op_eval() {
             }
         }
 
-        // Expression is not a special form.  We evaluate all items in the
-        // list and then pass the tail to the built-in or procedure
-        // represented by the first item.
-        lsp_expr_t *evaled = NULL;
-        lsp_expr_t *cursor = expr;
-        while (lsp_type(cursor) == LSP_CONS) {
-            evaled = lsp_cons(lsp_eval(lsp_car(cursor), env), evaled);
-            cursor = lsp_cdr(cursor);
-        }
-        evaled = lsp_reverse(evaled);
+        int length = 0;
 
-        lsp_expr_t *callable = lsp_car(evaled);
-        lsp_expr_t *args = lsp_cdr(evaled);
+        // Evaluate the whole list of expressions and unpack it to the stack.
+        while (lsp_dup(-1), !lsp_is_null()) {
+            length += 1;
 
-        if (lsp_type(callable) == LSP_OP) {
-            // Expression is a call to a built-in procedure represented by a
-            // function pointer.
-            lsp_op_t op = *lsp_as_op(callable);
-            return op(args);
-        } else if (lsp_type(callable) == LSP_CONS) {
-            // Break the callable up into its component pieces.
-            lsp_expr_t *function = lsp_car(callable);
-            lsp_expr_t *arg_spec = lsp_car(function);
-            lsp_expr_t *body = lsp_cdr(function);
-            lsp_expr_t *closure = lsp_cdr(callable);
+            // Copy the environment to the top of the stack.
+            lsp_dup(0);
 
-            // Bind function arguments to a new environment.
-            lsp_expr_t *function_env = lsp_push_scope(closure);
-            while (lsp_type(arg_spec) == LSP_CONS) {
-                lsp_define(
-                    lsp_as_sym(lsp_car(arg_spec)),
-                    lsp_car(args),
-                    function_env
-                );
-                arg_spec = lsp_cdr(arg_spec);
-                args = lsp_cdr(args);
-            }
+            // Unpack the next expression in the list on top of it.
+            lsp_dup(-2);
+            lsp_car();
 
-            // Evaluate the function.
-            lsp_expr_t * result = lsp_eval(body, function_env);
+            // Evaluate it.
+            lsp_eval();
 
-            return result;
-        } else {
-            assert(false);
+            // Save the result.
+            lsp_swp(-2);
+
+            // Move to the next item in the list.
+            lsp_cdr();
         }
 
+        // Move the function from the bottom of the stack to the top and call
+        // it.
+        lsp_dup(2);
+        lsp_call(length - 1);
     } else {
-        // Expression is a literal that can be returned as-is.
-        return expr;
+        // Expression is a literal that does not need to be evaluated.  Discard
+        // the environment and return it as is.
+        lsp_swp(-1);
+        lsp_pop();
     }
 }
 
@@ -245,3 +282,5 @@ void lsp_eval() {
     lsp_push_op(lsp_op_eval);
     lsp_call(2);
 }
+
+
