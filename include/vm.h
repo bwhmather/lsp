@@ -28,6 +28,7 @@ void lsp_pop_to(int offset);
 void lsp_swp(int offset);  // helper
 
 void lsp_call(int nargs);
+void lsp_return(int nret);
 
 bool lsp_is_null();
 bool lsp_is_cons();

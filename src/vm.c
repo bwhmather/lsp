@@ -6,6 +6,16 @@
 #include <string.h>
 #include <assert.h>
 
+typedef enum {
+    LSP_TYPE_NULL = 0,
+    LSP_TYPE_CONS,
+    LSP_TYPE_INT,
+    LSP_TYPE_SYM,
+    LSP_TYPE_STR,
+    LSP_TYPE_OP,
+} lsp_type_t;
+
+
 /**
  * An offset into one of the two heap arrays.
  */
@@ -37,8 +47,14 @@ typedef struct {
 typedef struct {
     lsp_type_t type;
     uint32_t size;
-    char *data;
-} lsp_data_t;
+    char data[];
+} lsp_header_t;
+
+
+typedef struct {
+    lsp_offset_t frame_ptr;
+    // TODO return address.
+} lsp_frame_t;
 
 
 static const lsp_ref_t LSP_NULL = {
@@ -48,10 +64,16 @@ static const lsp_ref_t LSP_NULL = {
 
 
 static lsp_cons_t *cons_heap;
-static lsp_offset_t cons_heap_cursor;
+static lsp_offset_t cons_heap_ptr;
 
 static char *data_heap;
-static lsp_offset_t data_heap_cursor;
+static lsp_offset_t data_heap_ptr;
+
+static lsp_ref_t *ref_stack;
+static int ref_stack_ptr;
+
+static lsp_frame_t *call_stack;
+static int call_stack_ptr;
 
 static uint32_t mark_stack;
 static char *cons_heap_mark_bitset;
@@ -59,30 +81,39 @@ static char *data_heap_mark_bitset;
 static uint64_t *heap_offset_cache;
 
 
+/**
+ * Internal forward declarations.
+ */
+static void lsp_gc_internal_mark_heap();
+static void lsp_gc_internal_rebuild_offset_cache();
+static void lsp_gc_internal_compact();
+static void lsp_gc_internal_update_stack();
+static lsp_cons_t *lsp_heap_get_cons(lsp_ref_t ref);
+static lsp_header_t *lsp_heap_get_header(lsp_ref_t ref);
+static lsp_type_t lsp_heap_get_type(lsp_ref_t ref);
+static char *lsp_heap_get_data(lsp_ref_t ref);
+static lsp_ref_t lsp_heap_alloc_null();
+static lsp_ref_t lsp_heap_alloc_cons(car, cdr);
+static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size);
+static void lsp_push_ref(lsp_ref_t expr);
+static lsp_ref_t lsp_get_at_offset(int offset);
+static void lsp_put_at_offset(lsp_ref_t value, int offset);
+static void lsp_push_null_terminated(lsp_type_t type, char *value);
+
+
+
 void lsp_vm_init() {
     // TODO This doesn't work if overcommit is disabled.
     // Block size times maximum index.
-    heap_data = (lsp_heap_block_t *)malloc(8 * 4294967296);
-    // Metadata block size times maximum index.
-    heap_metadata = (lsp_heap_meta_t *)malloc(
-        sizeof(lsp_heap_meta_t) * 4294967296
-    );
-    heap_cursor = 0;
+    cons_heap = (lsp_cons_t *) malloc(0x80000000 * sizeof(lsp_cons_t));
+    cons_heap_ptr = 0;
 
-    // Size of a reference times an arbitrary stack size.
-    stack = (lsp_ref_t *malloc(sizeof(lsp_ref_t) * 1024);
-    frame_ptr = stack;
-    stack_ptr = stack;
+    data_heap = (char *) malloc(0x80000000 * 8);
+    data_heap_ptr = 0;
 
-    // TODO I think the worst case is much lower.
-    heap_mark_stack = (lsp_ref_t *)malloc(sizeof(lsp_ref_t) * 4294967296);
-    // One bit times the maximum number of blocks.
-    heap_mark_bitset = (uint64_t *)malloc(4294967296 / 8)
-    // One offset for every bit in the bitset.
-    heap_offset_cache = (heap_ref_t *)malloc(
-        sizeof(heap_ref_t) * (4294967296 / 8)
-    )
+    lsp_heap_alloc_null();
 }
+
 
 /**
  * Internal functions for actually performing a garbage collection.
@@ -117,23 +148,23 @@ void lsp_gc_collect() {
 static lsp_cons_t *lsp_heap_get_cons(lsp_ref_t ref) {
     assert(ref.is_cons);
     assert(ref.offset <= 0x80000000);
-    assert(ref.offset < cons_heap_cursor);
+    assert(ref.offset < cons_heap_ptr);
 
-    return cons_heap[ref.offset];
+    return &cons_heap[ref.offset];
 }
 
 
-static lsp_data_t *lsp_heap_get_raw_header(lsp_ref_t ref) {
+static lsp_header_t *lsp_heap_get_header(lsp_ref_t ref) {
     assert(!ref.is_cons);
     assert(ref.offset >= 1);
     assert(ref.offset <= 0x80000000);
-    assert(ref.offset < data_heap_cursor;
+    assert(ref.offset < data_heap_ptr);
 
-    return (lsp_data_t *) &data_heap[ref.offset << 4];
+    return (lsp_header_t *) &data_heap[ref.offset << 4];
 }
 
 
-static lsp_data_t *lsp_heap_get_type(lsp_ref_t ref) {
+static lsp_type_t lsp_heap_get_type(lsp_ref_t ref) {
     if (ref.is_cons) {
         return LSP_TYPE_CONS;
     }
@@ -142,50 +173,50 @@ static lsp_data_t *lsp_heap_get_type(lsp_ref_t ref) {
         return LSP_TYPE_NULL;
     }
 
-    lsp_data_t *header = lsp_heap_get_raw_header(ref);
-    return header.type;
+    lsp_header_t *header = lsp_heap_get_header(ref);
+    return header->type;
 }
 
 
-static lsp_data_t *lsp_heap_get_data(lsp_ref_t ref) {
-    lsp_data_t *header = lsp_heap_get_raw_header(ref);
-    return header.data;
+static char *lsp_heap_get_data(lsp_ref_t ref) {
+    lsp_header_t *header = lsp_heap_get_header(ref);
+    return header->data;
 }
 
 
 static lsp_ref_t lsp_heap_alloc_null() {
     // Null can only be initialised as the first item on the data-heap.
-    assert(data_heap_cursor == 0);
+    assert(data_heap_ptr == 0);
 
-    // Construct a reference to the data pointed to by cursor.
+    // Construct a reference to the data pointed to by ptr.
     lsp_ref_t ref;
     ref.is_cons = false;
     ref.offset = 0;
 
-    // Bump the cursor;
-    data_heap_cursor += 1;
+    // Bump the ptr;
+    data_heap_ptr += 1;
 
     // Initialise the header.
     // TODO might be worth clearing the data.
-    lsp_data_t *lsp_heap_get_raw_header(ref);
-    data->type = LSP_TYPE_NULL;
-    data->size = 0;
+    lsp_header_t *header = lsp_heap_get_header(ref);
+    header->type = LSP_TYPE_NULL;
+    header->size = 0;
 
     return ref;
 }
 
 
 static lsp_ref_t lsp_heap_alloc_cons(car, cdr) {
-    assert(cons_heap_cursor <= 0x80000000);
+    assert(cons_heap_ptr <= 0x80000000);
 
     // Construct a reference.
     lsp_ref_t ref;
     ref.is_cons = true;
-    ref.offset = cons_heap_cursor;
+    ref.offset = cons_heap_ptr;
     return ref;
 
-    // Bump the cursor.
-    cons_heap_cursor += 1;
+    // Bump the ptr.
+    cons_heap_ptr += 1;
 
     // Initialise the cons cell.
     lsp_cons_t *cons = lsp_heap_get_cons(ref);
@@ -198,22 +229,22 @@ static lsp_ref_t lsp_heap_alloc_cons(car, cdr) {
 
 static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
     // Offset zero is reserved for null.
-    assert(data_heap_cursor >= 1);
-    assert(data_heap_cursor <= 0x80000000);
+    assert(data_heap_ptr >= 1);
+    assert(data_heap_ptr <= 0x80000000);
 
-    // Construct a reference to the data pointed to by cursor.
+    // Construct a reference to the data pointed to by ptr.
     lsp_ref_t ref;
     ref.is_cons = false;
-    ref.offset = data_heap_cursor;
+    ref.offset = data_heap_ptr;
 
-    // Bump the cursor;
-    data_heap_cursor += (sizeof(lsp_data_t) + size) >> 4;
+    // Bump the ptr;
+    data_heap_ptr += (sizeof(lsp_header_t) + size) >> 4;
 
     // Initialise the header.
     // TODO might be worth clearing the data.
-    lsp_data_t *lsp_heap_get_data(ref);
-    data->type = type;
-    data->size = size >> 4;
+    lsp_header_t *header = lsp_heap_get_header(ref);
+    header->type = type;
+    header->size = size >> 4;
 
     return ref;
 }
@@ -222,15 +253,31 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
 /**
  * Stack operations.
  */
-static void lsp_push_ref(lsp_ref_t expr) {
-    *stack_ptr = expr;
-    stack_ptr++;
+void lsp_call(int nargs) {
+    call_stack_ptr++;
+    call_stack[call_stack_ptr].frame_ptr = ref_stack_ptr - nargs;
+}
+
+static void lsp_return(int nret) {
+    ref_stack_ptr = call_stack[call_stack_ptr].frame_ptr + nret;
+    call_stack_ptr--;
+}
+
+static void lsp_push_ref(lsp_ref_t ref) {
+    ref_stack[ref_stack_ptr] = ref;
+    ref_stack_ptr++;
 }
 
 static lsp_ref_t lsp_get_at_offset(int offset) {
-    lsp_ref_t *src = offset < 0 ? stack_ptr + offset : frame_ptr + offset;
-    assert(src >= frame_ptr && src < stack_ptr);
-    return *src;
+    lsp_frame_t *frame = &call_stack[call_stack_ptr - 1];
+    int abs_offset;
+    if (offset < 0) {
+        abs_offset = ref_stack_ptr + offset;
+    } else {
+        abs_offset = frame->frame_ptr + offset;
+    }
+    assert(abs_offset >= frame->frame_ptr && abs_offset < ref_stack_ptr);
+    return ref_stack[abs_offset];
 }
 
 static void lsp_put_at_offset(lsp_ref_t value, int offset) {
@@ -251,7 +298,7 @@ void lsp_push_cons() {
 void lsp_push_op(void (* value)());
 void lsp_push_int(int value) {
     // Allocate space.
-    lsp_ref_t *ref = lsp_heap_alloc_data(LSP_TYPE_INT, sizeof(value));
+    lsp_ref_t ref = lsp_heap_alloc_data(LSP_TYPE_INT, sizeof(value));
 
     // Copy the value into the allocated space.
     char *data = lsp_heap_get_data(ref);
@@ -267,26 +314,26 @@ static void lsp_push_null_terminated(lsp_type_t type, char *value) {
     size_t size = strlen(value) + 1;
 
     // Allocate space.
-    lsp_ref_t *ref = lsp_heap_alloc_data(type, size);
+    lsp_ref_t ref = lsp_heap_alloc_data(type, size);
 
     // Copy the string, including the terminating null byte, into the allocated
     // space.
     char *data = lsp_heap_get_data(ref);
     memcpy(data, value, sizeof(value));
 
-    return ref;
+    lsp_push_ref(ref);
 }
 
 void lsp_push_symbol(char *value) {
-    return lsp_push_null_terminated(LSP_TYPE_SYM, value);
+    lsp_push_null_terminated(LSP_TYPE_SYM, value);
 }
 
 void lsp_push_string(char *value) {
-    return lsp_push_null_terminated(LSP_TYPE_STR, value);
+    lsp_push_null_terminated(LSP_TYPE_STR, value);
 }
 
 int lsp_read_int() {
-    lsp_ref_t value = lsp_get_at_offset(-1);
+    lsp_ref_t ref = lsp_get_at_offset(-1);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_INT);
     int *data = (int *) lsp_heap_get_data(ref);
     return *data;
