@@ -491,6 +491,10 @@ void lsp_pop_to(int offset) {
     ref_stack_ptr = abs_offset;
 }
 
+void lsp_pop() {
+    lsp_pop_to(-1);
+}
+
 void lsp_swp(int offset) {
     lsp_ref_t tgt = lsp_get_at_offset(offset);
     lsp_ref_t top = lsp_get_at_offset(-1);
