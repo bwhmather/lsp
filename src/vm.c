@@ -287,12 +287,12 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
 /**
  * Stack operations.
  */
-void lsp_call(int nargs) {
+void lsp_enter_frame(int nargs) {
     frame_stack_ptr++;
     frame_stack[frame_stack_ptr] = ref_stack_ptr - nargs;
 }
 
-void lsp_return(int nret) {
+void lsp_exit_frame(int nret) {
     ref_stack_ptr = frame_stack[frame_stack_ptr] + nret;
     frame_stack_ptr--;
 }

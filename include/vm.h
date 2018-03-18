@@ -30,8 +30,8 @@ void lsp_pop();  // helper
 void lsp_pop_to(int offset);
 void lsp_swp(int offset);  // helper
 
-void lsp_call(int nargs);
-void lsp_return(int nret);
+void lsp_enter_frame(int nargs);
+void lsp_exit_frame(int nret);
 
 bool lsp_is_null();
 bool lsp_is_cons();
