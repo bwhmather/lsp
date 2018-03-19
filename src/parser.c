@@ -1,5 +1,8 @@
-#include "heap.h"
+#include "parser.h"
 
+#include "vm.h"
+
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 
@@ -50,24 +53,41 @@ static bool lsp_is_symbol_character(char next) {
 }
 
 
-static lsp_expr_t *lsp_parse_symbol() {
-    lsp_expr_t *symbol = lsp_symbol_start();
+static void lsp_parse_symbol() {
+    size_t buffer_size = 256;
+    char *buffer = (char *) malloc(buffer_size);
+    if (buffer == NULL) {
+        abort();
+    }
+    size_t cursor = 0;
 
     char next = lsp_parser_next();
 
     while (lsp_is_symbol_character(next)) {
-        lsp_symbol_push(next);
+        if (cursor == buffer_size - 2) {
+            buffer_size += buffer_size / 2;
+            buffer = realloc(buffer, buffer_size);
+            if (buffer == NULL) {
+                abort();
+            }
+        }
+
+        buffer[cursor] = next;
+        cursor++;
+
         lsp_parser_advance();
         next = lsp_parser_next();
     }
 
-    lsp_symbol_stop();
+    buffer[cursor] = '\0';
 
-    return symbol;
+    lsp_push_symbol(buffer);
+
+    free(buffer);
 }
 
 
-static lsp_expr_t *lsp_parse_number() {
+static void lsp_parse_number() {
     bool negative = false;
     int accumulator = 0;
 
@@ -86,31 +106,35 @@ static lsp_expr_t *lsp_parse_number() {
         next = lsp_parser_next();
     }
 
-    return lsp_int(negative ? -accumulator : accumulator);
+    lsp_push_int(negative ? -accumulator : accumulator);
 }
 
 
-lsp_expr_t *lsp_parse() {
+void lsp_parse() {
     lsp_parser_advance();
     lsp_parser_advance();
 
-    // The reversed list of elements in the current body.
-    lsp_expr_t *body = NULL;
+    // The first item on the stack is a list, ordered inner to outer, of
+    // pointers to the last cons cell in each list body.
+    lsp_push_null();
 
-    // stack is a list, ordered inner to outer, of pointers to the last cons
-    // cell in each list body.
-    lsp_expr_t *stack = NULL;
+    // The second item on the stack is a reversed list of elements in the
+    // current body.
+    lsp_push_null();
 
     while (true) {
         lsp_consume_whitespace();
-        
+
         char next = lsp_parser_next();
         char lookahead = lsp_parser_lookahead();
 
         if (next == '(') {
-            // Push the current body onto the stack, and start a new one.
-            stack = lsp_cons(body, stack);
-            body = NULL;
+            // Push the current body onto the stack, consuming it.
+            lsp_dup(0);
+            lsp_cons();
+
+            // Replace it with a new empty list.
+            lsp_push_null();
 
             lsp_parser_advance();
 
@@ -118,19 +142,30 @@ lsp_expr_t *lsp_parse() {
             continue;
         }
 
-        // Parse the next expression and save it in the current environment. 
-        lsp_expr_t *expression;
-
         if (next == '\0') {
-            return lsp_reverse(body);
-        } else if (next == ')') {
+            // Put the body list back in the right order and return it.
+            lsp_reverse();
+            lsp_store(0);
+            return;
+        }
+
+        // Parse the next expression and save it as the third item in this
+        // stack frame.
+        if (next == ')') {
             // Unwind and reverse the current body list and store it as the
             // current expression.
-            expression = lsp_reverse(body);
+            lsp_dup(1);
+            lsp_reverse();
 
-            // Pop the containing body from the stack and set it as current.
-            body = lsp_car(stack);
-            stack = lsp_cdr(stack);
+            // Replace the body list with the next one down the parse stack.
+            lsp_dup(0);
+            lsp_car();
+            lsp_store(1);
+
+            // Pop the parse stack.
+            lsp_dup(0);
+            lsp_cdr();
+            lsp_store(0);
 
             lsp_parser_advance();
         } else if (next == '.') {
@@ -139,15 +174,17 @@ lsp_expr_t *lsp_parse() {
             (next >= '0' && next <= '9') ||
             (next == '-' && lookahead >= '0' && lookahead <= '9')
         ) {
-            expression = lsp_parse_number();
+            lsp_parse_number();
         } else if (lsp_is_symbol_character(next)) {
-            expression = lsp_parse_symbol();
+            lsp_parse_symbol();
         } else {
             assert(false);
         }
 
-        // Push expression.
-        body = lsp_cons(expression, body);
+        // Replace the body with a new list containing the new expression as
+        // its first element.
+        lsp_swp(-1);
+        lsp_cons();
     }
 }
 
