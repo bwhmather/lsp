@@ -48,7 +48,7 @@ void lsp_op_eval() {
 
             lsp_dup(-1);
             lsp_car();
-            char *sym = lsp_read_sym();
+            char *sym = lsp_read_symbol();
             if (strcmp(sym, "if") == 0) {
                 // Strip the `if`.
                 lsp_cdr();
