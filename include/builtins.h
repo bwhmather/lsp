@@ -1,7 +1,5 @@
 #pragma once
 
-#include "heap.h"
 
-
-lsp_expr_t *lsp_default_env();
+void lsp_push_default_env();
 
