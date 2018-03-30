@@ -122,7 +122,7 @@ void lsp_eval() {
                 return;
             }
             if (strcmp(sym, "set!") == 0) {
-                // Strip the `define`.
+                // Strip the `set!`.
                 lsp_cdr();
 
                 // Unpack the key and value.
@@ -146,10 +146,10 @@ void lsp_eval() {
                 return;
             }
             if (strcmp(sym, "lambda") == 0) {
-                // Strip the `define`.
+                // Strip the `lambda`.
                 lsp_cdr();
 
-                // Unpack the argument list and body..
+                // Unpack the argument list and body.
                 lsp_unpack(2);
 
                 // Pop the tail of the expression and check that it contains no
