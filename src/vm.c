@@ -133,15 +133,19 @@ void lsp_vm_init() {
     // TODO This doesn't work if overcommit is disabled.
     // Block size times maximum index.
     cons_heap = (lsp_cons_t *) malloc(CONS_HEAP_MAX * sizeof(lsp_cons_t));
+    assert(cons_heap != NULL);
     cons_heap_ptr = 0;
 
     data_heap = (char *) malloc(DATA_HEAP_MAX * 8);
+    assert(data_heap != NULL);
     data_heap_ptr = 0;
 
     ref_stack = (lsp_ref_t *) malloc(REF_STACK_MAX * sizeof(lsp_ref_t));
+    assert(ref_stack != NULL);
     ref_stack_ptr = 0;
 
     frame_stack = (int *) malloc(FRAME_STACK_MAX * sizeof(int));
+    assert(frame_stack != NULL);
 
     // The first object allocated on the data stack must always be the null
     // singleton.
