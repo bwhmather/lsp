@@ -5,58 +5,41 @@
 #include "env.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 
 
-static void lsp_op_add() {
-    int a = lsp_read_int(0);
-    int b = lsp_read_int(1);
+void lsp_add() {
+    int a = lsp_read_int(-2);
+    int b = lsp_read_int(-1);
     lsp_pop_to(0);
     lsp_push_int(a + b);
 }
 
-static void lsp_op_sub() {
-    int a = lsp_read_int(0);
-    int b = lsp_read_int(1);
+void lsp_sub() {
+    int a = lsp_read_int(-2);
+    int b = lsp_read_int(-1);
     lsp_pop_to(0);
     lsp_push_int(a - b);
 }
 
-static void lsp_op_mul() {
-    int a = lsp_read_int(0);
-    int b = lsp_read_int(1);
+void lsp_mul() {
+    int a = lsp_read_int(-2);
+    int b = lsp_read_int(-1);
     lsp_pop_to(0);
     lsp_push_int(a * b);
 }
 
-static void lsp_op_div() {
-    int a = lsp_read_int(0);
-    int b = lsp_read_int(1);
+void lsp_div() {
+    int a = lsp_read_int(-2);
+    int b = lsp_read_int(-1);
     lsp_pop_to(0);
     lsp_push_int(a / b);
 }
 
-static void lsp_op_cons() {
-    lsp_cons();
-}
+void lsp_map() {
+    lsp_enter_frame(2);
 
-static void lsp_op_car() {
-    lsp_car();
-}
-
-static void lsp_op_set_car() {
-    lsp_set_car();
-}
-
-static void lsp_op_cdr() {
-    lsp_cdr();
-}
-
-static void lsp_op_set_cdr() {
-    lsp_set_cdr();
-}
-
-void lsp_op_map() {
     // A cons cell used to track the building of the list.  The cdr points to
     // the root of the list.  The car points to the cons that should be
     // appended to next.  It will initially be set to the tracking cons cell
@@ -96,6 +79,8 @@ void lsp_op_map() {
 
     // Return the output list.
     lsp_cdr();
+
+    lsp_exit_frame(1);
 }
 
 /**
@@ -104,7 +89,9 @@ void lsp_op_map() {
  * - init
  * - input
  */
-lsp_op_fold() {
+void lsp_fold() {
+    lsp_enter_frame(3);
+
     while (lsp_dup(2), !lsp_is_null()) {
         // Read the next item in the list.
         lsp_dup(2);
@@ -130,28 +117,99 @@ lsp_op_fold() {
 
     // Return the accumulator as the result.
     lsp_store(0);
+
+    lsp_exit_frame(1);
 }
 
 
-static void lsp_bind(char *symbol, lsp_op_t operation) {
-    lsp_dup(-1);
-    lsp_push_symbol(symbol);
-    lsp_push_op(operation);
-    lsp_define();
+void lsp_reverse() {
+    lsp_enter_frame(1);
+
+    lsp_push_null();
+
+    while (lsp_dup(0), !lsp_is_null()) {
+        // Replace the output list with a new one starting with the next item
+        // in the input list.
+        lsp_dup(0);
+        lsp_car();
+        lsp_swp(1);
+        lsp_cons();
+
+        // Pop the value from the input list.
+        lsp_dup(0);
+        lsp_cdr();
+        lsp_store(0);
+    }
+
+    // Replace the drained input list with the output list.
+    lsp_store(0);
+
+    lsp_exit_frame(1);
 }
 
-void lsp_push_default_env() {
-    lsp_empty_env();
 
-    lsp_bind("+", &lsp_op_add);
-    lsp_bind("-", &lsp_op_sub);
-    lsp_bind("*", &lsp_op_mul);
-    lsp_bind("/", &lsp_op_div);
-    lsp_bind("cons", &lsp_op_cons);
-    lsp_bind("car", &lsp_op_car);
-    lsp_bind("set-car!", &lsp_op_set_car);
-    lsp_bind("cdr", &lsp_op_cdr);
-    lsp_bind("set-cdr!", &lsp_op_set_cdr);
-    lsp_bind("map", &lsp_op_map);
-    lsp_bind("fold", &lsp_op_fold);
+
+void lsp_print() {
+    if (lsp_dup(-1), lsp_is_null()) {
+        printf("()");
+        return;
+    }
+
+    if (lsp_dup(-1), lsp_is_cons()) {
+        printf("(");
+
+        while (lsp_dup(-1), lsp_is_cons()) {
+            // Print the next element in the array.
+            lsp_dup(-1);
+            lsp_car();
+            lsp_print();
+
+            // Move to the next element.
+            lsp_cdr();
+
+            // If there is more to come, print a separator.
+            if (lsp_dup(-1), lsp_is_cons()) {
+                printf(" ");
+            }
+        }
+
+        // If the list is terminated with something other than null, print it
+        // after printing a dot.
+        if (lsp_dup(-1), !lsp_is_null()) {
+            printf(" . ");
+            lsp_dup(-1);
+            lsp_print();
+        }
+        lsp_pop();
+
+        printf(")");
+
+        return;
+    }
+
+    if (lsp_dup(-1), lsp_is_int()) {
+        int value = lsp_read_int();
+        printf("%i", value);
+        return;
+    }
+
+    if (lsp_dup(-1), lsp_is_symbol()) {
+        char *str = lsp_read_symbol();
+        printf("%s", str);
+        return;
+    }
+
+    if (lsp_dup(-1), lsp_is_string()) {
+        char *str = lsp_read_string();
+        printf("\"%s\"", str);  // TODO escape
+        return;
+    }
+
+    if (lsp_dup(-1), lsp_is_op()) {
+        lsp_pop();
+        printf("<builtin>");
+        return;
+    }
 }
+
+

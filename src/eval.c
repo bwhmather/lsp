@@ -27,10 +27,12 @@ static void lsp_unpack(int n) {
  * Evaluates the expression passed as its second argument in the environment
  * passed as its first.
  */
-void lsp_op_eval() {
+void lsp_eval() {
+    lsp_enter_frame(1);
+
     if (lsp_dup(-1), lsp_is_symbol()) {
         // Expression is a name identifying a variable that can be loaded
-        // from the environment.  `lookup` will po the environment and symbol
+        // from the environment.  `lookup` will pop the environment and symbol
         // from the stack and replace them with the correct value.
         lsp_lookup();
         return;
@@ -232,12 +234,6 @@ void lsp_op_eval() {
         lsp_swp(-1);
         lsp_pop();
     }
+
+    lsp_exit_frame(1);
 }
-
-
-void lsp_eval() {
-    lsp_push_op(lsp_op_eval);
-    lsp_call(2);
-}
-
-

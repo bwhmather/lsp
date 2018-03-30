@@ -1,5 +1,7 @@
 #include "env.h"
 
+#include "builtins.h"
+
 #include "vm.h"
 #include "interpreter.h"
 
@@ -8,7 +10,7 @@
 #include <string.h>
 
 
-void lsp_empty_env() {
+void lsp_push_empty_env() {
     lsp_push_null();
     lsp_push_null();
     lsp_cons();
@@ -18,7 +20,7 @@ void lsp_empty_env() {
  * :param cons env:
  *     The environment to wrap in a new scope.
  */
-void lsp_op_push_scope() {
+void lsp_push_scope() {
     // Create an empty list of bindings.
     lsp_push_null();
 
@@ -29,19 +31,15 @@ void lsp_op_push_scope() {
 }
 
 
-void lsp_push_scope() {
-    lsp_push_op(lsp_op_push_scope);
-    lsp_call(1);
-}
-
-
 /**
  * Arguments:
  *   - environment
  *   - symbol
  *   - value
  */
-void lsp_op_define() {
+void lsp_define() {
+    lsp_enter_frame(3);
+
     // Wrap the symbol and value at the top of the stack in a cons cell.
     lsp_cons();
 
@@ -55,11 +53,8 @@ void lsp_op_define() {
 
     // Replace the old scope with the new one.
     lsp_set_car();
-}
 
-void lsp_define() {
-    lsp_push_op(lsp_op_define);
-    lsp_call(3);
+    lsp_exit_frame(1);
 }
 
 
@@ -68,11 +63,14 @@ void lsp_define() {
  *   - environment
  *   - symbol
  */
-void lsp_op_lookup() {
+void lsp_lookup() {
+    lsp_enter_frame(2);
+
     // Check that the current environment is not NULL.
     lsp_dup(0);
     if (lsp_is_null()) {
-        lsp_abort("undefined variable");
+        assert(false);
+        // lsp_abort("undefined variable");
     }
 
     // Extract the list of local bindings and save at the top of the stack.
@@ -119,11 +117,8 @@ void lsp_op_lookup() {
 
     // Search for the symbol in the parent environment.
     lsp_lookup();
-}
 
-void lsp_lookup() {
-    lsp_push_op(lsp_op_lookup);
-    lsp_call(2);
+    lsp_exit_frame(1);
 }
 
 
@@ -133,10 +128,13 @@ void lsp_lookup() {
  *   - symbol
  *   - value
  */
-void lsp_op_set() {
+void lsp_set() {
+    lsp_enter_frame(3);
+
     lsp_dup(0);
     if (lsp_is_null()) {
-        lsp_abort("undefined variable");
+        assert(false);
+        //lsp_abort("undefined variable");
     }
 
     // Extract the list of local bindings and save it at the top of the stack.
@@ -173,7 +171,6 @@ void lsp_op_set() {
         lsp_cdr();
     }
 
-
     // Remove the empty inner scope from the stack.
     lsp_pop_to(3);
 
@@ -184,10 +181,32 @@ void lsp_op_set() {
 
     // Search for the symbol in the parent environment.
     lsp_set();
+
+    lsp_exit_frame(1);
 }
 
 
-void lsp_set() {
-    lsp_push_op(lsp_op_set);
-    lsp_call(3);
+static void lsp_bind(char *symbol, lsp_op_t operation) {
+    lsp_dup(-1);
+    lsp_push_symbol(symbol);
+    lsp_push_op(operation);
+    lsp_define();
 }
+
+
+void lsp_push_default_env() {
+    lsp_push_empty_env();
+
+    lsp_bind("+", &lsp_add);
+    lsp_bind("-", &lsp_sub);
+    lsp_bind("*", &lsp_mul);
+    lsp_bind("/", &lsp_div);
+    lsp_bind("cons", &lsp_cons);
+    lsp_bind("car", &lsp_car);
+    lsp_bind("set-car!", &lsp_set_car);
+    lsp_bind("cdr", &lsp_cdr);
+    lsp_bind("set-cdr!", &lsp_set_cdr);
+    lsp_bind("map", &lsp_map);
+    lsp_bind("fold", &lsp_fold);
+}
+
