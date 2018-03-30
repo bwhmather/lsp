@@ -73,7 +73,7 @@ void lsp_eval() {
                     lsp_eval();
                 } else {
                     lsp_dup(0);  // The environment.
-                    lsp_dup(3);  // The alternate.
+                    lsp_dup(4);  // The alternate.
                     lsp_eval();
                 }
 
