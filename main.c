@@ -1,7 +1,9 @@
 #include "parser.h"
 #include "eval.h"
-#include "heap.h"
+#include "vm.h"
 #include "builtins.h"
+#include "env.h"
+#include "interpreter.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,9 +16,18 @@ int main(int argc, char **argv) {
     (void) argc;
     (void) argv;
 
-    lsp_heap_init();
-    lsp_expr_t *ast = lsp_parse();
-    lsp_expr_t *result = lsp_eval(lsp_car(ast), lsp_default_env());
-    lsp_print(result);
+    lsp_vm_init();
+
+    // Load the default environment.
+    lsp_push_default_env();
+
+    // Parse a list of expression from stdin.
+    lsp_parse();
+
+    // Evaluate the first expression in the list (TODO evaluate everything).
+    lsp_eval();
+
+    // Dump the result to stdout.
+    lsp_print();
 }
 
