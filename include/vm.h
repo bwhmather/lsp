@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef void (* lsp_op_t)(void);
 
@@ -42,4 +43,7 @@ bool lsp_is_op();
 
 bool lsp_is_truthy();
 bool lsp_is_equal();
+
+size_t lsp_stats_frame_size();
+size_t lsp_stats_stack_size();
 

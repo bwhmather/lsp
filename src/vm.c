@@ -564,3 +564,18 @@ bool lsp_is_truthy() {
 }
 
 bool lsp_is_equal();
+
+size_t lsp_stats_frame_size() {
+    assert(frame_stack_ptr > 0);
+    int frame_ptr = frame_stack[frame_stack_ptr - 1];
+    assert(frame_ptr >= 0);
+    assert(ref_stack_ptr >= 0);
+    assert(frame_ptr <= ref_stack_ptr);
+    return (size_t) (ref_stack_ptr - frame_ptr);
+}
+
+size_t lsp_stats_stack_size() {
+    assert(ref_stack_ptr >= 0);
+    return (size_t) ref_stack_ptr;
+}
+
