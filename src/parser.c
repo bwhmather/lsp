@@ -133,7 +133,7 @@ void lsp_parse() {
 
         if (next == '(') {
             // Push the current body onto the stack, consuming it.
-            lsp_dup(0);
+            lsp_swp(0);
             lsp_cons();
 
             // Replace it with a new empty list.
