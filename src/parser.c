@@ -174,6 +174,7 @@ void lsp_parse() {
             lsp_parser_advance();
         } else if (next == '.') {
             // TODO figure out how to parse non-list cons cells.
+            assert(false);
         } else if (
             (next >= '0' && next <= '9') ||
             (next == '-' && lookahead >= '0' && lookahead <= '9')
