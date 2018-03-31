@@ -194,7 +194,6 @@ static lsp_cons_t *lsp_heap_get_cons(lsp_ref_t ref) {
 
 static lsp_header_t *lsp_heap_get_header(lsp_ref_t ref) {
     assert(!ref.is_cons);
-    assert(ref.offset >= 1);
     assert(ref.offset <= DATA_HEAP_MAX);
     assert(ref.offset < data_heap_ptr);
 
@@ -251,7 +250,6 @@ static lsp_ref_t lsp_heap_alloc_cons() {
     lsp_ref_t ref;
     ref.is_cons = true;
     ref.offset = cons_heap_ptr;
-    return ref;
 
     // Bump the ptr.
     cons_heap_ptr += 1;
@@ -277,13 +275,13 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
     ref.offset = data_heap_ptr;
 
     // Bump the ptr;
-    data_heap_ptr += (sizeof(lsp_header_t) + size) >> 4;
+    data_heap_ptr += ((sizeof(lsp_header_t) + size - 1) / 8) + 1;
 
     // Initialise the header.
     // TODO might be worth clearing the data.
     lsp_header_t *header = lsp_heap_get_header(ref);
     header->type = type;
-    header->size = size >> 4;
+    header->size = ((size - 1) / 8) + 1;
 
     return ref;
 }
@@ -310,7 +308,7 @@ static lsp_ref_t lsp_get_at_offset(int offset) {
     int frame_ptr = frame_stack[frame_stack_ptr - 1];
     int abs_offset;
     if (offset < 0) {
-        assert(frame_ptr - ref_stack_ptr < offset);
+        assert(frame_ptr - ref_stack_ptr <= offset);
         abs_offset = ref_stack_ptr + offset;
     } else {
         assert(ref_stack_ptr - frame_ptr > offset);
@@ -323,7 +321,7 @@ static void lsp_put_at_offset(lsp_ref_t value, int offset) {
     int frame_ptr = frame_stack[frame_stack_ptr - 1];
     int abs_offset;
     if (offset < 0) {
-        assert(frame_ptr - ref_stack_ptr < offset);
+        assert(frame_ptr - ref_stack_ptr <= offset);
         abs_offset = ref_stack_ptr + offset;
     } else {
         assert(ref_stack_ptr - frame_ptr > offset);
@@ -485,7 +483,7 @@ void lsp_pop_to(int offset) {
     int frame_ptr = frame_stack[frame_stack_ptr - 1];
     int abs_offset;
     if (offset < 0) {
-        assert(frame_ptr - ref_stack_ptr < offset);
+        assert(frame_ptr - ref_stack_ptr <= offset);
         abs_offset = ref_stack_ptr + offset;
     } else {
         assert(ref_stack_ptr - frame_ptr > offset);
