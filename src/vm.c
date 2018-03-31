@@ -147,6 +147,9 @@ void lsp_vm_init() {
     frame_stack = (int *) malloc(FRAME_STACK_MAX * sizeof(int));
     assert(frame_stack != NULL);
 
+    frame_stack_ptr = 0;
+    lsp_enter_frame(0);
+
     // The first object allocated on the data stack must always be the null
     // singleton.
     lsp_heap_alloc_null();
@@ -290,12 +293,11 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
  * Stack operations.
  */
 void lsp_enter_frame(int nargs) {
-    frame_stack_ptr++;
     frame_stack[frame_stack_ptr] = ref_stack_ptr - nargs;
+    frame_stack_ptr++;
 }
 
 void lsp_exit_frame(int nret) {
-    ref_stack_ptr = frame_stack[frame_stack_ptr] + nret;
     frame_stack_ptr--;
 }
 
