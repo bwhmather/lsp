@@ -10,6 +10,7 @@ MAKEFLAGS += --no-builtin-rules
 ## Compiler options.
 CFLAGS += -std=c11
 CFLAGS += -Iinclude
+CFLAGS += -fPIC
 CFLAGS += -Wall -Wextra -pedantic
 
 # Debug specific flags.
