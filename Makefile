@@ -38,6 +38,12 @@ LIB_OBJS := $(patsubst src/%.c,build/lib/%.o,$(LIB_SRCS))
 LIB_DEPS := $(patsubst src/%.c,build/lib/%.d,$(LIB_SRCS))
 LIB_OUT := build/lib$(PROJECT).so
 
+TEST_SRCS := $(wildcard test/**/*.c test/*.c)
+TEST_DIRS := $(patsubst test%,build/test%,$(shell find test -type d))
+TEST_OBJS := $(patsubst test/%.c,build/test/%.o,$(TEST_SRCS))
+TEST_DEPS := $(patsubst test/%.c,build/test/%.d,$(TEST_SRCS))
+TEST_OUT := build/run-lib$(PROJECT)-tests
+
 BIN_SRCS := main.c
 BIN_DIRS := build/bin
 BIN_OBJS := build/bin/main.o
@@ -46,7 +52,7 @@ BIN_OUT := build/$(PROJECT)
 
 
 ## Build rules.
-all: $(BIN_OUT) $(LIB_OUT)
+all: $(BIN_OUT) $(LIB_OUT) $(TEST_OUT)
 
 $(LIB_OBJS) : build/lib/%.o : src/%.c
 	@mkdir -p $(LIB_DIRS)
@@ -55,6 +61,15 @@ $(LIB_OBJS) : build/lib/%.o : src/%.c
 
 $(LIB_OUT): $(LIB_OBJS)
 	$(CC) -shared $(CFLAGS) $(LDFLAGS) $(LIB_OBJS) -o $@
+
+
+$(TEST_OBJS) : build/test/%.o : test/%.c
+	@mkdir -p $(TEST_DIRS)
+	$(CC) $(CFLAGS) -c $< -o $@ -MMD
+-include ${TEST_DEPS}
+
+$(TEST_OUT): $(LIB_OUT) $(TEST_OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS) $(TEST_OBJS) -o $@ -Lbuild -llsp -lcriterion
 
 
 $(BIN_OBJS) : build/bin/%.o : %.c
