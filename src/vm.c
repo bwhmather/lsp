@@ -299,6 +299,7 @@ void lsp_enter_frame(int nargs) {
 
 void lsp_exit_frame(int nret) {
     frame_stack_ptr--;
+    ref_stack_ptr = frame_stack[frame_stack_ptr] + nret;
 }
 
 static void lsp_push_ref(lsp_ref_t ref) {
