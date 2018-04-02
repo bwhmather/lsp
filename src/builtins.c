@@ -12,28 +12,24 @@
 void lsp_add() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
-    lsp_pop_to(0);
     lsp_push_int(a + b);
 }
 
 void lsp_sub() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
-    lsp_pop_to(0);
     lsp_push_int(a - b);
 }
 
 void lsp_mul() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
-    lsp_pop_to(0);
     lsp_push_int(a * b);
 }
 
 void lsp_div() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
-    lsp_pop_to(0);
     lsp_push_int(a / b);
 }
 
@@ -194,14 +190,16 @@ void lsp_print() {
     }
 
     if (lsp_dup(-1), lsp_is_symbol()) {
-        char *str = lsp_read_symbol();
+        char *str = lsp_borrow_symbol();
         printf("%s", str);
+        lsp_pop();
         return;
     }
 
     if (lsp_dup(-1), lsp_is_string()) {
-        char *str = lsp_read_string();
+        char *str = lsp_borrow_string();
         printf("\"%s\"", str);  // TODO escape
+        lsp_pop();
         return;
     }
 

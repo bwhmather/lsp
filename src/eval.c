@@ -50,9 +50,11 @@ void lsp_eval() {
 
             lsp_dup(-1);
             lsp_car();
-            char *sym = lsp_read_symbol();
+            char *sym = lsp_borrow_symbol();
             if (strcmp(sym, "if") == 0) {
-                // Strip the `if`.
+                // Strip the `if` from the top of the stack and the beginning
+                // of the current expression.
+                lsp_pop();
                 lsp_cdr();
 
                 // Unpack the predicate, subsequent and alternate expressions.
@@ -82,7 +84,9 @@ void lsp_eval() {
                 return;
             }
             if (strcmp(sym, "quote") == 0) {
-                // Strip the `quote`.
+                // Strip the `quote` from the top of the stack and the
+                // beginning of the current expression.
+                lsp_pop();
                 lsp_cdr();
 
                 // Unpack the expression.
@@ -98,7 +102,9 @@ void lsp_eval() {
                 return;
             }
             if (strcmp(sym, "define") == 0) {
-                // Strip the `define`.
+                // Strip the `define` from the top of the stack and the
+                // beginning of the current expression.
+                lsp_pop();
                 lsp_cdr();
 
                 // Unpack the key and value.
@@ -122,7 +128,9 @@ void lsp_eval() {
                 return;
             }
             if (strcmp(sym, "set!") == 0) {
-                // Strip the `set!`.
+                // Strip the `set!` from the top of the stack and the beginning
+                // of the current expression.
+                lsp_pop();
                 lsp_cdr();
 
                 // Unpack the key and value.
@@ -146,6 +154,9 @@ void lsp_eval() {
                 return;
             }
             if (strcmp(sym, "lambda") == 0) {
+                // Strip the `lambda` from the top of the stack and the
+                // beginning of the current expression.
+                lsp_pop();
                 // Strip the `lambda`.
                 lsp_cdr();
 
@@ -170,7 +181,9 @@ void lsp_eval() {
                 return;
             }
             if (strcmp(sym, "begin") == 0) {
-                // Strip the `begin`.
+                // Strip the `begin` from the top of the stack and the
+                // beginning of the current expression.
+                lsp_pop();
                 lsp_cdr();
 
                 // Set a default result in case there are no expressions.
@@ -199,6 +212,9 @@ void lsp_eval() {
                 lsp_pop_to(1);
                 return;
             }
+
+            // Strip the unrecognised symbol from the top of the stack.
+            lsp_pop();
         }
 
         int length = 0;

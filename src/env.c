@@ -88,10 +88,12 @@ void lsp_lookup() {
         lsp_dup(1);
 
         // Compare it to the symbol we are interested in.
-        char *target = lsp_read_symbol();
-        char *current = lsp_read_symbol();
+        char *target = lsp_borrow_symbol();
+        char *current = lsp_borrow_symbol();
+        int cmp_result = strcmp(current, target);
+        lsp_pop(-2);
 
-        if (strcmp(current, target) == 0) {
+        if (cmp_result == 0) {
             // If equal then we have found what we are looking for.  Extract
             // the value from the corresponding entry in the scope and return
             // it.
@@ -152,10 +154,12 @@ void lsp_set() {
         lsp_dup(1);
 
         // Compare it to the symbol we are interested in.
-        char *target = lsp_read_symbol();
-        char *current = lsp_read_symbol();
+        char *target = lsp_borrow_symbol();
+        char *current = lsp_borrow_symbol();
+        int cmp_result = strcmp(current, target);
+        lsp_pop(-2);
 
-        if (strcmp(current, target) == 0) {
+        if (cmp_result == 0) {
             // Load a reference to the binding and replace its cdr with the new
             // value.
             lsp_car();

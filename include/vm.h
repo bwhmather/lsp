@@ -15,8 +15,8 @@ void lsp_push_symbol(char *value);
 void lsp_push_string(char *value);
 
 int lsp_read_int();
-char *lsp_read_symbol();
-char *lsp_read_string();
+char *lsp_borrow_symbol();
+char *lsp_borrow_string();
 lsp_op_t lsp_read_op();
 
 void lsp_cons();  // helper

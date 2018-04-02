@@ -63,7 +63,7 @@ static const lsp_ref_t LSP_NULL = {
  * `cons_heap` is a pointer to the root of the heap.  `cons_heap_ptr` is the
  * offset of the next unused cons cell.
  */
-static const lsp_offset_t CONS_HEAP_MAX = 0x80000000;
+static const lsp_offset_t CONS_HEAP_MAX = 1048576;  // 0x80000000;
 static lsp_cons_t *cons_heap;
 static lsp_offset_t cons_heap_ptr;
 
@@ -78,7 +78,7 @@ static lsp_offset_t cons_heap_ptr;
  * `data_heap` is a pointer to the root of the heap.  `data_heap_ptr` is equal
  * to the number of 8 byte blocks before the next available blocks.
  */
-static const lsp_offset_t DATA_HEAP_MAX = 0x80000000;
+static const lsp_offset_t DATA_HEAP_MAX = 1048576;  //  0x80000000;
 static char *data_heap;
 static lsp_offset_t data_heap_ptr;
 
@@ -395,16 +395,17 @@ int lsp_read_int() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_INT);
     int *data = (int *) lsp_heap_get_data(ref);
+    lsp_pop();
     return *data;
 }
 
-char *lsp_read_symbol() {
+char *lsp_borrow_symbol() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
 }
 
-char *lsp_read_string() {
+char *lsp_borrow_string() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
@@ -414,6 +415,7 @@ lsp_op_t lsp_read_op() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_OP);
     lsp_op_t *data = (lsp_op_t *) lsp_heap_get_data(ref);
+    lsp_pop();
     return *data;
 }
 
@@ -557,7 +559,7 @@ bool lsp_is_truthy() {
         case LSP_TYPE_SYM:
             return true;
         case LSP_TYPE_STR:
-            return strlen(lsp_read_string()) > 0;
+            return strlen(lsp_borrow_string()) > 0;
         default:
             assert(false);
     }
