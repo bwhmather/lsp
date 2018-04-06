@@ -1,0 +1,19 @@
+language: c
+sudo: false
+
+compiler:
+  - clang
+  - gcc
+
+addons:
+  apt:
+    sources:
+      - sourceline: 'ppa:snaipewastaken/ppa'
+    packages:
+      - criterion-dev
+ 
+install:
+  - make
+
+script:
+  - make test
