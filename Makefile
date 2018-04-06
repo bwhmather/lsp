@@ -70,6 +70,9 @@ $(TEST_OUT): $(LIB_OUT) $(TEST_OBJS)
 		-Lbuild -llsp -Wl,-rpath=./build -lcriterion \
 		-o $@
 
+test: $(TEST_OUT)
+	./build/run-liblsp-tests --full-stats --verbose=0
+
 
 ## Executable rules.
 BIN_SRCS := main.c
