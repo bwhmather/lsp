@@ -1,7 +1,8 @@
+#include "lsp.h"
+
 #include <string.h>
 #include <criterion/criterion.h>
 
-#include "vm.h"
 
 
 Test(cons, push) {
