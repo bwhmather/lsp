@@ -5,25 +5,28 @@
 #include <assert.h>
 
 
-void lsp_add() {
+/**
+ * Integer operations.
+ */
+void lsp_int_add() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a + b);
 }
 
-void lsp_sub() {
+void lsp_int_sub() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a - b);
 }
 
-void lsp_mul() {
+void lsp_int_mul() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a * b);
 }
 
-void lsp_div() {
+void lsp_int_div() {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a / b);

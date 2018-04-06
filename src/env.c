@@ -196,10 +196,10 @@ static void lsp_bind(char *symbol, lsp_op_t operation) {
 void lsp_push_default_env() {
     lsp_push_empty_env();
 
-    lsp_bind("+", &lsp_add);
-    lsp_bind("-", &lsp_sub);
-    lsp_bind("*", &lsp_mul);
-    lsp_bind("/", &lsp_div);
+    lsp_bind("+", &lsp_int_add);
+    lsp_bind("-", &lsp_int_sub);
+    lsp_bind("*", &lsp_int_mul);
+    lsp_bind("/", &lsp_int_div);
     lsp_bind("cons", &lsp_cons);
     lsp_bind("car", &lsp_car);
     lsp_bind("set-car!", &lsp_set_car);
