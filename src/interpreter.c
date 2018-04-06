@@ -1,6 +1,4 @@
-#include "interpreter.h"
-
-#include "vm.h"
+#include "lsp.h"
 
 #include <assert.h>
 

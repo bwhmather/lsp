@@ -1,7 +1,4 @@
-#include "parser.h"
-
-#include "vm.h"
-#include "builtins.h"
+#include "lsp.h"
 
 #include <stdlib.h>
 #include <stdio.h>

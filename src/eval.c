@@ -1,8 +1,4 @@
-#include "eval.h"
-
-#include "vm.h"
-#include "interpreter.h"
-#include "env.h"
+#include "lsp.h"
 
 #include <string.h>
 #include <assert.h>

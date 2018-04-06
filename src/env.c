@@ -1,9 +1,4 @@
-#include "env.h"
-
-#include "builtins.h"
-
-#include "vm.h"
-#include "interpreter.h"
+#include "lsp.h"
 
 #include <stdlib.h>
 #include <assert.h>
