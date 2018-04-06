@@ -32,7 +32,7 @@ LDFLAGS += -Wl,--no-undefined
 
 
 # Default target
-all: $(BIN_OUT) $(LIB_OUT) $(TEST_OUT)
+default: all
 
 
 ## Library rules.
@@ -81,6 +81,9 @@ $(BIN_OBJS) : build/bin/%.o : %.c
 
 $(BIN_OUT): $(LIB_OUT) $(BIN_OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS) $(BIN_OBJS) -o $@ -Lbuild -llsp
+
+
+all: $(BIN_OUT) $(LIB_OUT) $(TEST_OUT)
 
 
 ## Distribution
