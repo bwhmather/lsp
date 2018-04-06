@@ -64,7 +64,11 @@ $(TEST_OBJS) : build/test/%.o : test/%.c
 -include ${TEST_DEPS}
 
 $(TEST_OUT): $(LIB_OUT) $(TEST_OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS) $(TEST_OBJS) -o $@ -Lbuild -llsp -lcriterion
+	$(CC) $(CFLAGS) \
+		$(LDFLAGS) $(LIBS) \
+		$(TEST_OBJS) \
+		-Lbuild -llsp -Wl,-rpath=./build -lcriterion \
+		-o $@
 
 
 ## Executable rules.
