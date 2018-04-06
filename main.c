@@ -1,9 +1,4 @@
-#include "parser.h"
-#include "eval.h"
-#include "vm.h"
-#include "builtins.h"
-#include "env.h"
-#include "interpreter.h"
+#include "lsp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
