@@ -421,8 +421,8 @@ lsp_op_t lsp_read_op() {
 }
 
 void lsp_cons() {
-    lsp_ref_t car_ref = lsp_get_at_offset(-2);
-    lsp_ref_t cdr_ref = lsp_get_at_offset(-1);
+    lsp_ref_t car_ref = lsp_get_at_offset(-1);
+    lsp_ref_t cdr_ref = lsp_get_at_offset(-2);
     lsp_ref_t cons_ref = lsp_heap_alloc_cons();
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);

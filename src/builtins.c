@@ -54,6 +54,7 @@ void lsp_map() {
 
         // Save the result in a new cons cell.
         lsp_push_null();
+        lsp_swp(-1);
         lsp_cons();
 
         // Append the new cons cell to the end of the output list.
@@ -127,7 +128,6 @@ void lsp_reverse() {
         // in the input list.
         lsp_dup(0);
         lsp_car();
-        lsp_swp(1);
         lsp_cons();
 
         // Pop the value from the input list.

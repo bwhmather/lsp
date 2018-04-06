@@ -21,7 +21,6 @@ void lsp_push_scope() {
 
     // Store it as the first entry in a pair containing a list of bindings as
     // its car, and a parent scope as its cdr.
-    lsp_swp(-1);
     lsp_cons();
 }
 
@@ -36,6 +35,7 @@ void lsp_define() {
     lsp_enter_frame(3);
 
     // Wrap the symbol and value at the top of the stack in a cons cell.
+    lsp_swp(-1);
     lsp_cons();
 
     // Read the inner most scope from the environment and store it behind the
@@ -44,6 +44,7 @@ void lsp_define() {
     lsp_car();
 
     // Create a new scope with the new binding as its first entry.
+    lsp_swp(-1);
     lsp_cons();
 
     // Replace the old scope with the new one.

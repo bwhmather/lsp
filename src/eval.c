@@ -163,11 +163,13 @@ static void lsp_eval_inner() {
                 assert(lsp_is_null());
 
                 // Wrap the arg spec and function body up to form a function.
+                lsp_swp(-1);
                 lsp_cons();
 
                 // Bind the function object and environment together to create
                 // a closure.
                 lsp_dup(0);
+                lsp_swp(-1);
                 lsp_cons();
 
                 // Return the closure.

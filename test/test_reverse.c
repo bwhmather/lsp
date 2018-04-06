@@ -17,8 +17,8 @@ Test(reverse, null) {
 Test(reverse, pair) {
     lsp_vm_init();
 
-    lsp_push_int(12);
     lsp_push_null();
+    lsp_push_int(12);
     lsp_cons();
 
     lsp_reverse();
@@ -40,10 +40,10 @@ Test(reverse, pair) {
 Test(reverse, triple) {
     lsp_vm_init();
 
-    lsp_push_int(1);
-    lsp_push_int(2);
     lsp_push_null();
+    lsp_push_int(2);
     lsp_cons();
+    lsp_push_int(1);
     lsp_cons();
 
     lsp_reverse();

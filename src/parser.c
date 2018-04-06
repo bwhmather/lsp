@@ -131,6 +131,7 @@ void lsp_parse() {
         if (next == '(') {
             // Push the current body onto the stack, consuming it.
             lsp_swp(0);
+            lsp_swp(-1);
             lsp_cons();
 
             // Replace it with a new empty list.
@@ -185,7 +186,6 @@ void lsp_parse() {
 
         // Replace the body with a new list containing the new expression as
         // its first element.
-        lsp_swp(-1);
         lsp_cons();
     }
 }

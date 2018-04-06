@@ -29,8 +29,8 @@ Test(cons, cons_nulls) {
 Test(cons, car) {
     lsp_vm_init();
 
-    lsp_push_int(1);
     lsp_push_int(2);
+    lsp_push_int(1);
 
     lsp_cons();
 
@@ -42,8 +42,8 @@ Test(cons, car) {
 Test(cons, cdr) {
     lsp_vm_init();
 
-    lsp_push_int(1);
     lsp_push_int(2);
+    lsp_push_int(1);
 
     lsp_cons();
 
