@@ -87,14 +87,15 @@ bool lsp_is_string();
  *
  * The reference pointing to the string will **not** be popped from the stack.
  *
- * .. warning::
+ * Warning:
  *     Calling any lsp function other than `lsp_borrow_string` is could result
  *     in a garbage collection that would invalidate the reference..
  */
 char *lsp_borrow_string();
 
 /**
- * Pops a string and replaces it with an integer specifying its length.
+ * Pops a string and replaces it with an integer who's value is the same as the
+ * string's length.
  *
  * Arguments:
  *   - string: The string we would like to find the length for.
@@ -104,8 +105,8 @@ char *lsp_borrow_string();
  */
 void lsp_str_len();
 
-/**
- * Pops a pair of strings from the stack and returns a new 
+/* Pops a pair of strings from the stack and returns a new one containing the
+ * bytes of the first string followed by the bytes of the second.
  */
 void lsp_str_concat();
 
