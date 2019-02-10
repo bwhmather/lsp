@@ -281,11 +281,11 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
 /**
  * Stack operations.
  */
-lsp_fp_t lsp_get_frame() {
+lsp_fp_t lsp_get_fp() {
     return (lsp_fp_t) ref_frame_ptr;
 }
 
-void lsp_advance_frame(int nargs) {
+void lsp_shrink_frame(int nargs) {
     if (nargs < 0) {
         assert(false);
         // lsp_abort("new frame cannot contain a negative number of references");
@@ -299,7 +299,7 @@ void lsp_advance_frame(int nargs) {
     ref_frame_ptr = ref_stack_ptr - nargs;
 }
 
-void lsp_restore_frame(lsp_fp_t fp) {
+void lsp_restore_fp(lsp_fp_t fp) {
     if (fp < 0 || fp > REF_STACK_MAX) {
         assert(false);
         // lsp_abort("cannot restore frame pointer to invalid value");

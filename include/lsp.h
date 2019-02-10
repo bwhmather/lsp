@@ -73,21 +73,21 @@ void lsp_swp(int offset);  // helper
  * Returns an opaque copy of the current value of the frame pointer that can
  * be used to restore it at a later stage.
  */
-lsp_fp_t lsp_get_frame();
+lsp_fp_t lsp_get_fp();
 
 /**
  * Advances the frame pointer so that the current frame only contains the
  * requested number of arguments.
  *
  * Callers are responsible for restoring the frame pointer to its original
- * value.  This should be done using `lsp_get_frame` and `lsp_restore_frame`
- * instead of attempting to calculate a value to pass to `lsp_advance_frame`.
+ * value.  This should be done using `lsp_get_fp` and `lsp_restore_fp` instead
+ * of attempting to calculate a value to pass to `lsp_shrink_frame`.
  *
  * Will abort if passed a value larger than the number of references in the
  * current frame.
  * Will abort if passed a value less than zero.
  */
-void lsp_advance_frame(int nargs);
+void lsp_shrink_frame(int nargs);
 
 /**
  * Restores the frame pointer to a previous value.
@@ -98,7 +98,7 @@ void lsp_advance_frame(int nargs);
  * It is not required that the frame pointer be less than or equal to the
  * current frame pointer, but doing this suggests a mistake.
  */
-void lsp_restore_frame(lsp_fp_t fp);
+void lsp_restore_fp(lsp_fp_t fp);
 
 
 /**
