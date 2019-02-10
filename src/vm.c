@@ -90,13 +90,7 @@ static lsp_offset_t data_heap_ptr;
 static const int REF_STACK_MAX = 0x100000;
 static lsp_ref_t *ref_stack;
 static int ref_stack_ptr;
-
-
-/**
- */
-static const int FRAME_STACK_MAX = 0x100;
-static int *frame_stack;
-static int frame_stack_ptr;
+static int ref_frame_ptr;
 
 
 /**
@@ -143,12 +137,7 @@ void lsp_vm_init() {
     ref_stack = (lsp_ref_t *) malloc(REF_STACK_MAX * sizeof(lsp_ref_t));
     assert(ref_stack != NULL);
     ref_stack_ptr = 0;
-
-    frame_stack = (int *) malloc(FRAME_STACK_MAX * sizeof(int));
-    assert(frame_stack != NULL);
-
-    frame_stack_ptr = 0;
-    lsp_enter_frame(0);
+    ref_frame_ptr = 0;
 
     // The first object allocated on the data stack must always be the null
     // singleton.
@@ -292,14 +281,36 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
 /**
  * Stack operations.
  */
-void lsp_enter_frame(int nargs) {
-    frame_stack[frame_stack_ptr] = ref_stack_ptr - nargs;
-    frame_stack_ptr++;
+lsp_fp_t lsp_get_frame() {
+    return (lsp_fp_t) ref_frame_ptr;
 }
 
-void lsp_exit_frame(int nret) {
-    frame_stack_ptr--;
-    ref_stack_ptr = frame_stack[frame_stack_ptr] + nret;
+void lsp_advance_frame(int nargs) {
+    if (nargs < 0) {
+        assert(false);
+        // lsp_abort("new frame cannot contain a negative number of references");
+    }
+
+    if (nargs > (ref_stack_ptr - ref_frame_ptr)) {
+        assert(false);
+        // lsp_abort("not enough values to create new frame");
+    }
+
+    ref_frame_ptr = ref_stack_ptr - nargs;
+}
+
+void lsp_restore_frame(lsp_fp_t fp) {
+    if (fp < 0 || fp > REF_STACK_MAX) {
+        assert(false);
+        // lsp_abort("cannot restore frame pointer to invalid value");
+    }
+
+    if (fp > ref_stack_ptr) {
+        assert(false);
+        // lsp_abort("cannot restore frame that has been completely popped");
+    }
+
+    ref_stack_ptr = fp;
 }
 
 static void lsp_push_ref(lsp_ref_t ref) {
@@ -308,29 +319,29 @@ static void lsp_push_ref(lsp_ref_t ref) {
 }
 
 static lsp_ref_t lsp_get_at_offset(int offset) {
-    int frame_ptr = frame_stack[frame_stack_ptr - 1];
     int abs_offset;
     if (offset < 0) {
-        assert(frame_ptr - ref_stack_ptr <= offset);
+        // Offset is less than zero so is relative to the stack pointer.
+        assert(ref_frame_ptr - ref_stack_ptr <= offset);
         abs_offset = ref_stack_ptr + offset;
     } else {
-        assert(ref_stack_ptr - frame_ptr > offset);
-        abs_offset = frame_ptr + offset;
+        // Offset is greater than zero so is relative to the frame pointer.
+        assert(ref_stack_ptr - ref_frame_ptr > offset);
+        abs_offset = ref_frame_ptr + offset;
     }
     return ref_stack[abs_offset];
 }
 
 static void lsp_put_at_offset(lsp_ref_t value, int offset) {
-    int frame_ptr = frame_stack[frame_stack_ptr - 1];
     int abs_offset;
     if (offset < 0) {
-        assert(frame_ptr - ref_stack_ptr <= offset);
+        assert(ref_frame_ptr - ref_stack_ptr <= offset);
         abs_offset = ref_stack_ptr + offset;
     } else {
-        assert(ref_stack_ptr - frame_ptr > offset);
-        abs_offset = frame_ptr + offset;
+        assert(ref_stack_ptr - ref_frame_ptr > offset);
+        abs_offset = ref_frame_ptr + offset;
     }
-    assert(abs_offset >= frame_ptr && abs_offset < ref_stack_ptr);
+    assert(abs_offset >= ref_frame_ptr && abs_offset < ref_stack_ptr);
     ref_stack[abs_offset] = value;
 }
 
@@ -485,14 +496,13 @@ void lsp_store(int offset) {
 }
 
 void lsp_pop_to(int offset) {
-    int frame_ptr = frame_stack[frame_stack_ptr - 1];
     int abs_offset;
     if (offset < 0) {
-        assert(frame_ptr - ref_stack_ptr <= offset);
+        assert(ref_frame_ptr - ref_stack_ptr <= offset);
         abs_offset = ref_stack_ptr + offset;
     } else {
-        assert(ref_stack_ptr - frame_ptr > offset);
-        abs_offset = frame_ptr + offset;
+        assert(ref_stack_ptr - ref_frame_ptr > offset);
+        abs_offset = ref_frame_ptr + offset;
     }
 
     ref_stack_ptr = abs_offset;
@@ -569,12 +579,10 @@ bool lsp_is_truthy() {
 bool lsp_is_equal();
 
 size_t lsp_stats_frame_size() {
-    assert(frame_stack_ptr > 0);
-    int frame_ptr = frame_stack[frame_stack_ptr - 1];
-    assert(frame_ptr >= 0);
+    assert(ref_frame_ptr >= 0);
     assert(ref_stack_ptr >= 0);
-    assert(frame_ptr <= ref_stack_ptr);
-    return (size_t) (ref_stack_ptr - frame_ptr);
+    assert(ref_frame_ptr <= ref_stack_ptr);
+    return (size_t) (ref_stack_ptr - ref_frame_ptr);
 }
 
 size_t lsp_stats_stack_size() {

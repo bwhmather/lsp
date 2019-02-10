@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 typedef void (* lsp_op_t)(void);
+typedef int lsp_fp_t;
 
 
 /**
@@ -68,8 +69,36 @@ void lsp_pop_to(int offset);
  */
 void lsp_swp(int offset);  // helper
 
-void lsp_enter_frame(int nargs);
-void lsp_exit_frame(int nret);
+/**
+ * Returns an opaque copy of the current value of the frame pointer that can
+ * be used to restore it at a later stage.
+ */
+lsp_fp_t lsp_get_frame();
+
+/**
+ * Advances the frame pointer so that the current frame only contains the
+ * requested number of arguments.
+ *
+ * Callers are responsible for restoring the frame pointer to its original
+ * value.  This should be done using `lsp_get_frame` and `lsp_restore_frame`
+ * instead of attempting to calculate a value to pass to `lsp_advance_frame`.
+ *
+ * Will abort if passed a value larger than the number of references in the
+ * current frame.
+ * Will abort if passed a value less than zero.
+ */
+void lsp_advance_frame(int nargs);
+
+/**
+ * Restores the frame pointer to a previous value.
+ *
+ * This must be less than or equal to the current stack pointer.
+ * Will abort if the stack has been popped too far.
+ *
+ * It is not required that the frame pointer be less than or equal to the
+ * current frame pointer, but doing this suggests a mistake.
+ */
+void lsp_restore_frame(lsp_fp_t fp);
 
 
 /**
