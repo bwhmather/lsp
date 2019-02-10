@@ -7,12 +7,65 @@ typedef void (* lsp_op_t)(void);
 
 
 /**
- * Stack operations.
+ * Stack operations
+ * ----------------
+ *
+ * Operations on the stack usually involve offset.
+ * Offsets less than zero are relative to the stack pointer.  The offset of the
+ * value at the top of the heap is -1.
+ *
+ * Offsets greater than or equal to zero are relative to the frame pointer.
+ * The offset of the first reference in the current frame is 0.
+ */
+
+/**
+ * Copies the reference at `offset` to the top of the reference stack.
+ *
+ * `lsp_dup(-1)` will duplicate the value at the top of the stack.
+ *
+ * Will abort if `offset` is not in bounds.
  */
 void lsp_dup(int offset);
+
+/**
+ * Pops the reference at the top of the stack and saves it at offset.
+ *
+ * Will abort if the stack is empty.
+ * Will abort if `offset` is not in bounds.
+ *
+ * It is not safe to call `lsp_store` while holding raw pointers to objects
+ * stored on the heap.
+ */
 void lsp_store(int offset);
+
+/**
+ * Pops and discards the reference at the top of the stack.
+ *
+ * Will abort if the stack is empty.
+ * Will abort if `offset` is not in bounds.
+ *
+ * It is not safe to call `lsp_pop` while holding raw pointers to objects
+ * stored on the heap.
+ */
 void lsp_pop();  // helper
+
+/**
+ * Pops all references up to and including the value at `offset` from the top
+ * of the stack.
+ *
+ * Will abort if `offset` is not in bounds.
+ *
+ * It is not safe to call `lsp_pop_to` while holding raw pointers to objects
+ * stored on the heap.
+ */
 void lsp_pop_to(int offset);
+
+/**
+ * Swaps the reference at `offset` with the reference at the top of the stack.
+ *
+ * Will abort if the stack is empty.
+ * Will abort if `offset` is not in bounds.
+ */
 void lsp_swp(int offset);  // helper
 
 void lsp_enter_frame(int nargs);
