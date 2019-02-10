@@ -73,7 +73,13 @@ void lsp_exit_frame(int nret);
 
 
 /**
- * Null.
+ * Heap operations
+ * ===============
+ */
+
+/**
+ * Null
+ * ----
  */
 void lsp_push_null();
 bool lsp_is_null();
@@ -115,8 +121,8 @@ bool lsp_symbol_matches_literal(const char *value);
 
 
 /**
- * String
- * ------
+ * Strings
+ * -------
  */
 
 /**
