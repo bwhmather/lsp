@@ -33,7 +33,8 @@ void lsp_int_div() {
 }
 
 void lsp_map() {
-    lsp_enter_frame(2);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(2);
 
     // A cons cell used to track the building of the list.  The cdr points to
     // the root of the list.  The car points to the cons that should be
@@ -69,13 +70,15 @@ void lsp_map() {
 
     // Move the tracking cell to the bottom of the stack.
     lsp_store(0);
+
     // Get rid of the input list.
     lsp_pop();
 
     // Return the output list.
     lsp_cdr();
 
-    lsp_exit_frame(1);
+    lsp_pop_to(1);
+    lsp_restore_fp(rp);
 }
 
 /**
@@ -85,7 +88,8 @@ void lsp_map() {
  * - input
  */
 void lsp_fold() {
-    lsp_enter_frame(3);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(3);
 
     while (lsp_dup(2), !lsp_is_null()) {
         // Read the next item in the list.
@@ -113,12 +117,14 @@ void lsp_fold() {
     // Return the accumulator as the result.
     lsp_store(0);
 
-    lsp_exit_frame(1);
+    lsp_pop_to(1);
+    lsp_restore_fp(rp);
 }
 
 
 void lsp_reverse() {
-    lsp_enter_frame(1);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(1);
 
     lsp_push_null();
 
@@ -139,7 +145,8 @@ void lsp_reverse() {
     // Replace the drained input list with the output list.
     lsp_store(0);
 
-    lsp_exit_frame(1);
+    lsp_pop_to(1);
+    lsp_restore_fp(rp);
 }
 
 

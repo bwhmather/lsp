@@ -249,7 +249,10 @@ static void lsp_eval_inner() {
 
 
 void lsp_eval() {
-    lsp_enter_frame(2);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(2);
+
     lsp_eval_inner();
-    lsp_exit_frame(1);
+
+    lsp_restore_fp(rp);
 }

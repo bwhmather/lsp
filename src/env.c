@@ -33,7 +33,8 @@ void lsp_push_scope() {
  *   - value
  */
 void lsp_define() {
-    lsp_enter_frame(3);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(3);
 
     // Wrap the symbol and value at the top of the stack in a cons cell.
     lsp_cons();
@@ -49,7 +50,8 @@ void lsp_define() {
     // Replace the old scope with the new one.
     lsp_set_car();
 
-    lsp_exit_frame(1);
+    lsp_pop_to(1);
+    lsp_restore_fp(rp);
 }
 
 
@@ -59,7 +61,8 @@ void lsp_define() {
  *   - symbol
  */
 void lsp_lookup() {
-    lsp_enter_frame(2);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(2);
 
     // Check that the current environment is not NULL.
     lsp_dup(0);
@@ -97,7 +100,7 @@ void lsp_lookup() {
 
             lsp_store(0);
             lsp_pop_to(1);
-            return;
+            lsp_restore_fp(rp);
         }
 
         // Advance to the next entry in the list.
@@ -115,7 +118,8 @@ void lsp_lookup() {
     // Search for the symbol in the parent environment.
     lsp_lookup();
 
-    lsp_exit_frame(1);
+    lsp_pop_to(1);
+    lsp_restore_fp(rp);
 }
 
 
@@ -126,7 +130,8 @@ void lsp_lookup() {
  *   - value
  */
 void lsp_set() {
-    lsp_enter_frame(3);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(3);
 
     lsp_dup(0);
     if (lsp_is_null()) {
@@ -163,6 +168,7 @@ void lsp_set() {
             // Return null.
             lsp_pop_to(0);
             lsp_push_null();
+            lsp_restore_fp(rp);
             return;
         }
 
@@ -181,7 +187,7 @@ void lsp_set() {
     // Search for the symbol in the parent environment.
     lsp_set();
 
-    lsp_exit_frame(1);
+    lsp_restore_fp(rp);
 }
 
 

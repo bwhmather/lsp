@@ -12,9 +12,11 @@ void lsp_call(int nargs) {
         lsp_op_t op = lsp_read_op();
 
         // Evaluate it and then pop everything but the return value.
-        lsp_enter_frame(nargs);
+        lsp_fp_t rp = lsp_get_fp();
+        lsp_shrink_frame(nargs);
         op();
-        lsp_exit_frame(1);
+        lsp_pop_to(1);
+        lsp_restore_fp(rp);
         return;
     }
 

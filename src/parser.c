@@ -109,7 +109,8 @@ static void lsp_parse_number() {
 
 
 void lsp_parse() {
-    lsp_enter_frame(0);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(0);
 
     lsp_parser_advance();
     lsp_parser_advance();
@@ -146,7 +147,8 @@ void lsp_parse() {
             // Put the body list back in the right order and return it.
             lsp_reverse();
             lsp_store(0);
-            lsp_exit_frame(1);
+            lsp_pop_to(1);
+            lsp_restore_fp(rp);
             return;
         }
 

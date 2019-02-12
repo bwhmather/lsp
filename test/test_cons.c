@@ -83,13 +83,15 @@ Test(cons, set_car) {
     lsp_push_cons();
 
     lsp_dup(0);
-    lsp_enter_frame(1);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(1);
 
     lsp_push_int(5);
     lsp_set_car();
 
     cr_expect_eq(lsp_stats_frame_size(), 0);
-    lsp_exit_frame(0);
+    lsp_pop_to(0);
+    lsp_restore_fp(rp);
 
     lsp_car();
     cr_assert_eq(lsp_read_int(), 5);
@@ -101,13 +103,14 @@ Test(cons, set_cdr) {
     lsp_push_cons();
 
     lsp_dup(0);
-    lsp_enter_frame(1);
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(1);
 
     lsp_push_int(5);
     lsp_set_cdr();
 
     cr_expect_eq(lsp_stats_frame_size(), 0);
-    lsp_exit_frame(0);
+    lsp_restore_fp(rp);
 
     lsp_cdr();
     cr_assert_eq(lsp_read_int(), 5);
