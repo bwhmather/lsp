@@ -1,0 +1,19 @@
+#include "lsp.h"
+
+#include "lspt.h"
+
+
+int main(int argc, char **argv) {
+    lsp_vm_init();
+
+    lsp_push_int(1);
+    lsp_push_int(2);
+
+    lsp_cons();
+
+    lsp_cdr();
+
+    lspt_assert_eq(lsp_read_int(), 2);
+
+    return 0;
+}
