@@ -310,7 +310,7 @@ void lsp_restore_fp(lsp_fp_t fp) {
         // lsp_abort("cannot restore frame that has been completely popped");
     }
 
-    ref_stack_ptr = fp;
+    ref_frame_ptr = fp;
 }
 
 static void lsp_push_ref(lsp_ref_t ref) {
@@ -501,7 +501,7 @@ void lsp_pop_to(int offset) {
         assert(ref_frame_ptr - ref_stack_ptr <= offset);
         abs_offset = ref_stack_ptr + offset;
     } else {
-        assert(ref_stack_ptr - ref_frame_ptr > offset);
+        assert(ref_stack_ptr - ref_frame_ptr >= offset);
         abs_offset = ref_frame_ptr + offset;
     }
 
