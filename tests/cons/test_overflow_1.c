@@ -4,5 +4,6 @@
 
 
 int main(int argc, char **argv) {
-    lspt_expect_abort(abort());
+
+    lspt_assert_aborts(abort());
 }

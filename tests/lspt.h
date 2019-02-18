@@ -18,9 +18,15 @@ static void lspt_internal_on_sigabrt(int signal) {
 }
 
 #define lspt_assert_aborts(expr) do { \
-    signal(SIGABRT, &lspt_internal_on_sigabrt); \
+    struct sigaction lspt_handler_old; \
+    struct sigaction lspt_handler_new; \
+    memset(&lspt_handler_new, 0, sizeof(lspt_handler_new)); \
+    sigemptyset(&lspt_handler_new.sa_mask); \
+    lspt_handler_new.sa_handler = &lspt_internal_on_sigabrt; \
+    sigaction(SIGABRT, &lspt_handler_new, &lspt_handler_old); \
     expr; \
-    exit(1); \
+    sigaction(SIGABRT, &lspt_handler_old, NULL); \
+    abort(); \
 } while(0)
 
 #define lspt_assert_not(condition) LSPT_EXPAND(lspt_assert(!(condition)))
