@@ -9,7 +9,8 @@ typedef int lsp_fp_t;
 
 /**
  * Stack operations
- * ----------------
+ * ================
+ * Functions for manipulating the reference stack.
  *
  * Operations on the stack usually involve offset.
  * Offsets less than zero are relative to the stack pointer.  The offset of the
@@ -48,7 +49,7 @@ void lsp_store(int offset);
  * It is not safe to call `lsp_pop` while holding raw pointers to objects
  * stored on the heap.
  */
-void lsp_pop();  // helper
+void lsp_pop();
 
 /**
  * Pops all references up to and including the value at `offset` from the top
@@ -67,7 +68,7 @@ void lsp_pop_to(int offset);
  * Will abort if the stack is empty.
  * Will abort if `offset` is not in bounds.
  */
-void lsp_swp(int offset);  // helper
+void lsp_swp(int offset);
 
 /**
  * Returns an opaque copy of the current value of the frame pointer that can
@@ -100,7 +101,6 @@ void lsp_shrink_frame(int nargs);
  */
 void lsp_restore_fp(lsp_fp_t fp);
 
-
 /**
  * Heap operations
  * ===============
@@ -115,7 +115,8 @@ bool lsp_is_null();
 
 
 /**
- * Builtin function operations.
+ * Foreign Function Interface
+ * --------------------------
  */
 void lsp_push_op(void (* value)());
 bool lsp_is_op();
@@ -137,7 +138,6 @@ void lsp_int_add();
 void lsp_int_sub();
 void lsp_int_mul();
 void lsp_int_div();
-
 
 /**
  * Symbols
@@ -206,6 +206,9 @@ void lsp_str_concat();
 /**
  * Pushes a new cons cell on to the top of the stack with both car and cdr set
  * to null.
+ *
+ * Returns:
+ *   - A new cons cell.
  */
 void lsp_push_cons();
 
@@ -222,11 +225,11 @@ bool lsp_is_cons();
  * Pops two values from the top of the stack and wraps them in a cons cell.
  *
  * Arguments:
- *   - car: the value to save as the first value in the cons cell.
- *   - cdr: the value to save as the second value in the cons cell.
+ *   - car: The value to save as the first value in the cons cell.
+ *   - cdr: The value to save as the second value in the cons cell.
  *
  * Returns:
- *   - cons: the new cons cell.
+ *   - The new cons cell.
  */
 void lsp_cons();
 
@@ -265,8 +268,16 @@ void lsp_set_cdr();
 
 
 /**
- * Higher order list operations
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Higher Level Helper Functions
+ * =============================
+ * Utility functions implemented using the public API for performing common
+ * tasks.
+ */
+
+/**
+ * List Operations
+ * ---------------
+ * Higher order functions for operating on lists constructed from cons cells.
  */
 
 /**
@@ -286,11 +297,19 @@ void lsp_reverse();
 
 
 /**
- * Managing environments for function execution.
+ * Environments
+ * ------------
+ * Functions for adding and reading bindings from scopes.
  */
 
 /**
  * Creates a new empty scope that inherits from the current environment.
+ *
+ * Arguments:
+ *   - parent: The scope to inherit from.
+ *
+ * Returns:
+ *   - A new scope datastructure.
  */
 void lsp_push_scope();
 
@@ -309,10 +328,13 @@ void lsp_set();
 void lsp_push_empty_env();
 void lsp_push_default_env();
 
-
 /**
+ * Core Operations
+ * ===============
  * The core of the interpreter.
  */
+void lsp_abort();
+
 void lsp_vm_init();
 
 void lsp_parse();
@@ -322,11 +344,11 @@ void lsp_eval();
 
 void lsp_print();
 
-
 /**
  * Interpreter information.
  */
 size_t lsp_stats_frame_size();
 size_t lsp_stats_stack_size();
+
 
 
