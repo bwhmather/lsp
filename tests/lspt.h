@@ -7,7 +7,7 @@
     bool lspt_internal_condition = !!(condition); \
     /* char *lspt_internal_lineno = __LINE__; */ \
     /* char *lspt_internal_file = __FILE__; */ \
-    if (!condition) { \
+    if (!lspt_internal_condition) { \
         abort(); \
     } \
 } while (0)
