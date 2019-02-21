@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_is_cons` will pop its argument from the stack.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

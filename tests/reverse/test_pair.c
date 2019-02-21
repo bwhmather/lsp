@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_reverse` works when called on a two element list.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

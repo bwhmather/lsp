@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_set_car` correctly sets the first reference in a cons cell.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

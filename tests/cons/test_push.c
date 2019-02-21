@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_push_cons` pushes an empty cons cell.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

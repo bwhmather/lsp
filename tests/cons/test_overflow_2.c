@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_cons` aborts when called on an empty stack.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_is_cons` returns `false` when called on a null reference.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

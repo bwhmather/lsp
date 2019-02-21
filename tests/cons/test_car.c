@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_car` returns the value added as the car of a cons cell.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

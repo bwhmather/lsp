@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_reverse` correctly reverses a three element list.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

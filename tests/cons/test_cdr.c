@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_cdr` returns the second reference in a cons cell.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

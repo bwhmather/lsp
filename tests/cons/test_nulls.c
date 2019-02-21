@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_cons` pops it's arguments and pushes a cons cell.
+ */
 #include "lsp.h"
 
 #include "lspt.h"

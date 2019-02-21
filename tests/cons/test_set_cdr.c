@@ -1,3 +1,6 @@
+/**
+ * Checks that `lsp_set_cdr` replaces the second reference in a cons cell.
+ */
 #include "lsp.h"
 
 #include "lspt.h"
