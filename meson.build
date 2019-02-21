@@ -18,6 +18,7 @@ test_suites = {
     'null_is_not_cons',
     'nulls',
     'overflow_1',
+    'overflow_2',
     'push',
     'set_car',
     'set_cdr',
