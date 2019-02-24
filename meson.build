@@ -1,6 +1,9 @@
 project('lsp', 'c')
 
-sources = [
+includes = include_directories('include')
+
+### Library ###
+lib_sources = [
   'src/builtins.c',
   'src/env.c',
   'src/eval.c',
@@ -8,6 +11,23 @@ sources = [
   'src/parser.c',
   'src/vm.c',
 ]
+
+lib = both_libraries(
+  'lsp', lib_sources,
+  include_directories : includes,
+  install : true,
+)
+
+### Interpreter ###
+executable(
+  'lsp', 'main.c',
+  include_directories : includes,
+  link_with : lib,
+  install : true,
+)
+
+### Tests ###
+test_includes = include_directories('include', 'tests')
 
 test_suites = {
   'cons': [
@@ -29,23 +49,6 @@ test_suites = {
     'triple',
   ],
 }
-
-includes = include_directories('include')
-
-lib = both_libraries(
-  'lsp', sources,
-  include_directories : includes,
-  install : true,
-)
-
-executable(
-  'lsp', 'main.c',
-  include_directories : includes,
-  link_with : lib,
-  install : true,
-)
-
-test_includes = include_directories('include', 'tests')
 
 foreach suite, tests : test_suites
   foreach test_name : tests
