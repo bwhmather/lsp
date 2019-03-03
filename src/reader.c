@@ -4,8 +4,51 @@
 #include <stdio.h>
 #include <assert.h>
 
+typedef enum {
+    LSP_INPUT_NONE = 0,
+    LSP_INPUT_STRING,
+    LSP_INPUT_FILE,
+} lsp_input_type_t;
+
+static lsp_input_type_t input_type = LSP_INPUT_NONE;
+
+// State for reading from in-memory buffer.
+static char *input_string;
+static size_t input_string_cursor;
+
+// State for performing file IO.
+static FILE *input_file;
 
 static char lookahead_buffer[2] = {'\0', '\0'};
+
+
+static char lsp_parser_getc_string() {
+    assert(input_type == LSP_INPUT_STRING);
+    char next = input_string[input_string_cursor];
+    if (next != '\0') {
+        input_string_cursor++;
+    }
+    return next;
+}
+
+
+static char lsp_parser_getc_file() {
+    assert(input_type == LSP_INPUT_FILE);
+    int next = getc(input_file);
+    return next == EOF ? '\0' : next;
+}
+
+
+static char lsp_parser_getc() {
+    switch (input_type) {
+    case LSP_INPUT_STRING:
+        return lsp_parser_getc_string();
+    case LSP_INPUT_FILE:
+        return lsp_parser_getc_file();
+    default:
+        assert(false);
+    }
+}
 
 
 static char lsp_parser_next() {
@@ -19,10 +62,8 @@ static char lsp_parser_lookahead() {
 
 
 static void lsp_parser_advance() {
-    int next = getc(stdin);
-
     lookahead_buffer[0] = lookahead_buffer[1];
-    lookahead_buffer[1] = next == EOF ? '\0': next;
+    lookahead_buffer[1] = lsp_parser_getc();
 }
 
 
@@ -192,3 +233,40 @@ void lsp_parse() {
     }
 }
 
+void lsp_read_string(char *string) {
+    // Check that no read is in progress.
+    assert(input_type == LSP_INPUT_NONE);
+
+    // Set up input state.
+    input_type = LSP_INPUT_STRING;
+    input_string = string;
+    input_string_cursor = 0;
+
+    // Read.
+    lsp_parse();
+
+    // Tear down input state.
+    input_string = NULL;
+    input_type = LSP_INPUT_NONE;
+}
+
+
+void lsp_read_file(int fd) {
+    assert(input_type == LSP_INPUT_NONE);
+
+    // Open input as a stdio stream.
+    // TODO remove lazy dependency on stdio.
+    FILE *input = fdopen(fd, "r");
+    assert(input != NULL);
+
+    // Set up input state.
+    input_type = LSP_INPUT_FILE;
+    input_file = input;
+
+    // Read.
+    lsp_parse();
+
+    // Tear down input state.
+    input_file = NULL;
+    input_type = LSP_INPUT_NONE;
+}
