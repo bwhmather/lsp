@@ -96,11 +96,11 @@ static int ref_frame_ptr;
 /**
  * Arrays used for bookkeeping during garbage collection.
  */
-static uint32_t mark_stack;
-static char *cons_heap_mark_bitset;
-static char *data_heap_mark_bitset;
-static uint64_t *cons_heap_offset_cache;
-static uint64_t *data_heap_offset_cache;
+//static uint32_t mark_stack;
+//static char *cons_heap_mark_bitset;
+//static char *data_heap_mark_bitset;
+//static uint64_t *cons_heap_offset_cache;
+//static uint64_t *data_heap_offset_cache;
 
 
 /**
@@ -321,25 +321,29 @@ static void lsp_push_ref(lsp_ref_t ref) {
 static lsp_ref_t lsp_get_at_offset(int offset) {
     int abs_offset;
     if (offset < 0) {
-        // Offset is less than zero so is relative to the stack pointer.
+        // Offset is less than zero so is relative to the frame pointer.
         assert(ref_frame_ptr - ref_stack_ptr <= offset);
-        abs_offset = ref_stack_ptr + offset;
+        abs_offset = ref_frame_ptr - offset - 1;
     } else {
-        // Offset is greater than zero so is relative to the frame pointer.
+        // Offset is greater than zero so is relative to the stack pointer.
         assert(ref_stack_ptr - ref_frame_ptr > offset);
-        abs_offset = ref_frame_ptr + offset;
+        abs_offset = ref_stack_ptr - offset - 1;
     }
+    assert(abs_offset >= ref_frame_ptr);
+    assert(abs_offset < ref_stack_ptr);
     return ref_stack[abs_offset];
 }
 
 static void lsp_put_at_offset(lsp_ref_t value, int offset) {
     int abs_offset;
     if (offset < 0) {
+        // Offset is less than zero so is relative to the frame pointer.
         assert(ref_frame_ptr - ref_stack_ptr <= offset);
-        abs_offset = ref_stack_ptr + offset;
+        abs_offset = ref_frame_ptr - offset - 1;
     } else {
+        // Offset is greater than zero so is relative to the stack pointer.
         assert(ref_stack_ptr - ref_frame_ptr > offset);
-        abs_offset = ref_frame_ptr + offset;
+        abs_offset = ref_stack_ptr - offset - 1;
     }
     assert(abs_offset >= ref_frame_ptr && abs_offset < ref_stack_ptr);
     ref_stack[abs_offset] = value;
@@ -404,27 +408,26 @@ void lsp_push_op(lsp_op_t op) {
 }
 
 int lsp_read_int() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_INT);
     int *data = (int *) lsp_heap_get_data(ref);
-    lsp_pop();
     return *data;
 }
 
 char *lsp_borrow_symbol() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
 }
 
 char *lsp_borrow_string() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
 }
 
 lsp_op_t lsp_read_op() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_OP);
     lsp_op_t *data = (lsp_op_t *) lsp_heap_get_data(ref);
     lsp_pop();
@@ -432,56 +435,59 @@ lsp_op_t lsp_read_op() {
 }
 
 void lsp_cons() {
-    lsp_ref_t car_ref = lsp_get_at_offset(-2);
-    lsp_ref_t cdr_ref = lsp_get_at_offset(-1);
+    lsp_ref_t car_ref = lsp_get_at_offset(0);
+    lsp_ref_t cdr_ref = lsp_get_at_offset(1);
     lsp_ref_t cons_ref = lsp_heap_alloc_cons();
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);
     cons->car = car_ref;
     cons->cdr = cdr_ref;
 
-    lsp_pop_to(-2);
+    lsp_pop();
+    lsp_pop();
     lsp_push_ref(cons_ref);
 }
 
 void lsp_car() {
-    lsp_ref_t cons_ref = lsp_get_at_offset(-1);
+    lsp_ref_t cons_ref = lsp_get_at_offset(0);
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);
     lsp_ref_t car_ref = cons->car;
 
-    lsp_pop_to(-1);
+    lsp_pop();
     lsp_push_ref(car_ref);
 }
 
 void lsp_cdr() {
-    lsp_ref_t cons_ref = lsp_get_at_offset(-1);
+    lsp_ref_t cons_ref = lsp_get_at_offset(0);
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);
     lsp_ref_t cdr_ref = cons->cdr;
 
-    lsp_pop_to(-1);
+    lsp_pop();
     lsp_push_ref(cdr_ref);
 }
 
 void lsp_set_car() {
-    lsp_ref_t cons_ref = lsp_get_at_offset(-2);
-    lsp_ref_t car_ref = lsp_get_at_offset(-1);
+    lsp_ref_t cons_ref = lsp_get_at_offset(0);
+    lsp_ref_t car_ref = lsp_get_at_offset(1);
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);
     cons->car = car_ref;
 
-    lsp_pop_to(-2);
+    lsp_pop();
+    lsp_pop();
 }
 
 void lsp_set_cdr() {
-    lsp_ref_t cons_ref = lsp_get_at_offset(-2);
-    lsp_ref_t cdr_ref = lsp_get_at_offset(-1);
+    lsp_ref_t cons_ref = lsp_get_at_offset(0);
+    lsp_ref_t cdr_ref = lsp_get_at_offset(1);
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);
     cons->cdr = cdr_ref;
 
-    lsp_pop_to(-2);
+    lsp_pop();
+    lsp_pop();
 }
 
 void lsp_dup(int offset) {
@@ -490,69 +496,66 @@ void lsp_dup(int offset) {
 }
 
 void lsp_store(int offset) {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     lsp_put_at_offset(ref, offset);
-    lsp_pop_to(-1);
+
+    lsp_pop();
 }
 
 void lsp_pop_to(int offset) {
     int abs_offset;
     if (offset < 0) {
+        // Offset is less than zero so is relative to the frame pointer.
         assert(ref_frame_ptr - ref_stack_ptr <= offset);
-        abs_offset = ref_stack_ptr + offset;
+        abs_offset = ref_frame_ptr - offset - 1;
     } else {
-        assert(ref_stack_ptr - ref_frame_ptr >= offset);
-        abs_offset = ref_frame_ptr + offset;
+        // Offset is greater than zero so is relative to the stack pointer.
+        assert(ref_stack_ptr - ref_frame_ptr > offset);
+        abs_offset = ref_stack_ptr - offset - 1;
     }
-
     ref_stack_ptr = abs_offset;
 }
 
 void lsp_pop() {
-    lsp_pop_to(-1);
+    assert(ref_stack_ptr > ref_frame_ptr);
+    ref_stack_ptr--;
 }
 
 void lsp_swp(int offset) {
     lsp_ref_t tgt = lsp_get_at_offset(offset);
-    lsp_ref_t top = lsp_get_at_offset(-1);
+    lsp_ref_t top = lsp_get_at_offset(0);
 
     lsp_put_at_offset(top, offset);
-    lsp_put_at_offset(tgt, -1);
+    lsp_put_at_offset(tgt, 0);
 }
 
 bool lsp_is_null() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
-    lsp_pop_to(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_NULL;
 }
 
 bool lsp_is_cons() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
-    lsp_pop_to(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_CONS;
 }
 
 bool lsp_is_int() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
-    lsp_pop_to(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_INT;
 }
 
 bool lsp_is_symbol() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
-    lsp_pop_to(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_SYM;
 }
 
 bool lsp_is_string() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
-    lsp_pop_to(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_STR;
 }
 
 bool lsp_is_op() {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
-    lsp_pop_to(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_OP;
 }
 
@@ -560,10 +563,8 @@ bool lsp_is_truthy() {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     switch (lsp_heap_get_type(ref)) {
         case LSP_TYPE_NULL:
-            lsp_pop_to(-1);
             return false;
         case LSP_TYPE_CONS:
-            lsp_pop_to(-1);
             return true;
         case LSP_TYPE_INT:
             return lsp_read_int() != 0;

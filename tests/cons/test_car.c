@@ -9,14 +9,14 @@
 int main(int argc, char **argv) {
     lsp_vm_init();
 
-    lsp_push_int(1);
     lsp_push_int(2);
+    lsp_push_int(1);
 
     lsp_cons();
 
     lsp_car();
 
-    lspt_assert_eq(lsp_read_int(), 1);
+    lspt_assert(lsp_read_int() == 1);
 
     return 0;
 }

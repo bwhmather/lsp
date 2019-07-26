@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 
     lsp_push_null();
 
-    lspt_assert_not(lsp_is_cons());
+    lspt_assert(!lsp_is_cons());
 
     return 0;
 }

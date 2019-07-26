@@ -1,5 +1,5 @@
 /**
- * Checks that `lsp_is_cons` will pop its argument from the stack.
+ * Checks that `lsp_is_cons` does not pop its argument from the stack.
  */
 #include "lsp.h"
 
@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
     lsp_push_cons();
 
     lspt_expect(lsp_is_cons());
-    lspt_assert_eq(lsp_stats_frame_size(), 0);
+    lspt_assert(lsp_stats_frame_size() == 1);
 
     return 0;
 }
