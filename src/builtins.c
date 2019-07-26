@@ -127,25 +127,22 @@ void lsp_reverse() {
     lsp_shrink_frame(1);
 
     lsp_push_null();
+    lsp_swp(1);
 
-    while (lsp_dup(0), !lsp_is_null()) {
+    while (!lsp_is_null()) {
         // Replace the output list with a new one starting with the next item
         // in the input list.
-        lsp_dup(0);
+        lsp_dup(1);  // Output list
+        lsp_dup(1);  // Input list
         lsp_car();
-        lsp_swp(1);
         lsp_cons();
+        lsp_store(2);
 
         // Pop the value from the input list.
-        lsp_dup(0);
         lsp_cdr();
-        lsp_store(0);
     }
 
-    // Replace the drained input list with the output list.
-    lsp_store(0);
-
-    lsp_pop_to(1);
+    lsp_pop();
     lsp_restore_fp(rp);
 }
 
