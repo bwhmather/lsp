@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
 
     lsp_cdr();
 
-    lspt_assert(lsp_read_int() == 2);
+    lspt_assert(lsp_read_int(0) == 2);
 
     return 0;
 }

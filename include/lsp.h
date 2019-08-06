@@ -120,7 +120,7 @@ bool lsp_is_null();
  */
 void lsp_push_op(void (* value)());
 bool lsp_is_op();
-lsp_op_t lsp_read_op();
+lsp_op_t lsp_read_op(int offset);
 
 bool lsp_is_truthy();
 bool lsp_is_equal();
@@ -132,7 +132,7 @@ bool lsp_is_equal();
  */
 void lsp_push_int(int value);
 bool lsp_is_int();
-int lsp_read_int();
+int lsp_read_int(int offset);
 
 void lsp_int_add();
 void lsp_int_sub();
@@ -145,7 +145,7 @@ void lsp_int_div();
  */
 void lsp_push_symbol(char *value);
 bool lsp_is_symbol();
-char *lsp_borrow_symbol();
+char *lsp_borrow_symbol(int offset);
 bool lsp_symbol_matches_literal(const char *value);
 
 
@@ -179,7 +179,7 @@ bool lsp_is_string();
  *     Calling any lsp function other than `lsp_borrow_string` is could result
  *     in a garbage collection that would invalidate the reference..
  */
-char *lsp_borrow_string();
+char *lsp_borrow_string(int offset);
 
 /**
  * Pops a string and replaces it with an integer who's value is the same as the

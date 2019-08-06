@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 
     lsp_dup(0);
     lsp_car();
-    lspt_assert(lsp_read_int() == 12);
+    lspt_assert(lsp_read_int(0) == 12);
     lsp_pop();
 
     lsp_dup(0);

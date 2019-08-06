@@ -407,30 +407,29 @@ void lsp_push_op(lsp_op_t op) {
     lsp_push_ref(ref);
 }
 
-int lsp_read_int() {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+int lsp_read_int(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_INT);
     int *data = (int *) lsp_heap_get_data(ref);
     return *data;
 }
 
-char *lsp_borrow_symbol() {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+char *lsp_borrow_symbol(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
 }
 
-char *lsp_borrow_string() {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+char *lsp_borrow_string(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
 }
 
-lsp_op_t lsp_read_op() {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+lsp_op_t lsp_read_op(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_OP);
     lsp_op_t *data = (lsp_op_t *) lsp_heap_get_data(ref);
-    lsp_pop();
     return *data;
 }
 
@@ -567,11 +566,11 @@ bool lsp_is_truthy() {
         case LSP_TYPE_CONS:
             return true;
         case LSP_TYPE_INT:
-            return lsp_read_int() != 0;
+            return lsp_read_int(0) != 0;
         case LSP_TYPE_SYM:
             return true;
         case LSP_TYPE_STR:
-            return strlen(lsp_borrow_string()) > 0;
+            return strlen(lsp_borrow_string(0)) > 0;
         default:
             assert(false);
     }

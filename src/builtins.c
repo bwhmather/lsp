@@ -187,20 +187,20 @@ void lsp_print() {
     }
 
     if (lsp_dup(-1), lsp_is_int()) {
-        int value = lsp_read_int();
+        int value = lsp_read_int(0);
         printf("%i", value);
         return;
     }
 
     if (lsp_dup(-1), lsp_is_symbol()) {
-        char *str = lsp_borrow_symbol();
+        char *str = lsp_borrow_symbol(0);
         printf("%s", str);
         lsp_pop();
         return;
     }
 
     if (lsp_dup(-1), lsp_is_string()) {
-        char *str = lsp_borrow_string();
+        char *str = lsp_borrow_string(0);
         printf("\"%s\"", str);  // TODO escape
         lsp_pop();
         return;

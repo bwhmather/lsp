@@ -9,7 +9,8 @@
 void lsp_call(int nargs) {
     if (lsp_dup(-1), lsp_is_op()) {
         // Pop the operation from the top of the stack.
-        lsp_op_t op = lsp_read_op();
+        lsp_op_t op = lsp_read_op(0);
+        lsp_pop();
 
         // Evaluate it and then pop everything but the return value.
         lsp_fp_t rp = lsp_get_fp();

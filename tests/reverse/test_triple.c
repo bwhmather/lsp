@@ -23,13 +23,13 @@ int main(int argc, char **argv) {
 
     lsp_dup(0);
     lsp_car();
-    lspt_assert(lsp_read_int() == 2);
+    lspt_assert(lsp_read_int(0) == 2);
     lsp_pop();
 
     lsp_dup(0);
     lsp_cdr();
     lsp_car();
-    lspt_assert(lsp_read_int() == 1);
+    lspt_assert(lsp_read_int(0) == 1);
     lsp_pop();
 
     lsp_dup(0);

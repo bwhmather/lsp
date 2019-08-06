@@ -86,8 +86,8 @@ void lsp_lookup() {
         lsp_dup(1);
 
         // Compare it to the symbol we are interested in.
-        char *target = lsp_borrow_symbol();
-        char *current = lsp_borrow_symbol();
+        char *target = lsp_borrow_symbol(0);
+        char *current = lsp_borrow_symbol(1);
         int cmp_result = strcmp(current, target);
         lsp_pop(-2);
 
@@ -122,7 +122,6 @@ void lsp_lookup() {
     lsp_restore_fp(rp);
 }
 
-
 /**
  * Arguments:
  *   - environment
@@ -150,12 +149,9 @@ void lsp_set() {
         lsp_car();  // The first binding in the list.
         lsp_car();  // The key for the binding.
 
-        // Copy the target symbol.
-        lsp_dup(1);
-
         // Compare it to the symbol we are interested in.
-        char *target = lsp_borrow_symbol();
-        char *current = lsp_borrow_symbol();
+        char *target = lsp_borrow_symbol(0);
+        char *current = lsp_borrow_symbol(1);
         int cmp_result = strcmp(current, target);
         lsp_pop(-2);
 

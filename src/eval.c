@@ -45,7 +45,7 @@ static void lsp_eval_inner() {
 
             lsp_dup(-1);
             lsp_car();
-            char *sym = lsp_borrow_symbol();
+            char *sym = lsp_borrow_symbol(0);
             if (strcmp(sym, "if") == 0) {
                 // Strip the `if` from the top of the stack and the beginning
                 // of the current expression.
