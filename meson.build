@@ -54,6 +54,7 @@ test_suites = {
     'int_multiple_digit',
     'empty_list',
     'single_element_list',
+    'multi_element_list',
   ],
 }
 
