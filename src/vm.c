@@ -422,7 +422,7 @@ char *lsp_borrow_symbol(int offset) {
 
 char *lsp_borrow_string(int offset) {
     lsp_ref_t ref = lsp_get_at_offset(offset);
-    assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
+    assert(lsp_heap_get_type(ref) == LSP_TYPE_STR);
     return lsp_heap_get_data(ref);
 }
 
