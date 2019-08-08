@@ -48,6 +48,10 @@ test_suites = {
     'pair',
     'triple',
   ],
+  'reader': [
+    'empty',
+    'int_single_digit',
+  ],
 }
 
 foreach suite, tests : test_suites

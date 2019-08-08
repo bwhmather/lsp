@@ -4,25 +4,34 @@
 #include <stdio.h>
 #include <assert.h>
 
-// State for reading from in-memory buffer.
-static char *input_buffer;
-static size_t input_cursor;
 
 static char lsp_parser_next() {
-    return input_buffer[input_cursor];
+    const char *buffer = lsp_borrow_string(-1);
+    int cursor = lsp_read_int(-2);
+
+    return buffer[cursor];
 }
 
+
 static char lsp_parser_lookahead() {
-    if (input_buffer[input_cursor] == '\0') {
+    const char *buffer = lsp_borrow_string(-1);
+    int cursor = lsp_read_int(-2);
+
+    if (buffer[cursor] == '\0') {
         return '\0';
     }
-    return input_buffer[input_cursor + 1];
+
+    return buffer[cursor + 1];
 }
 
 
 static void lsp_parser_advance() {
-    if (lsp_parser_next() != '\0') {
-        input_cursor++;
+    const char *buffer = lsp_borrow_string(-1);
+    int cursor = lsp_read_int(-2);
+
+    if (buffer[cursor] != '\0') {
+        lsp_push_int(cursor + 1);
+        lsp_store(-2);
     }
 }
 
@@ -109,20 +118,31 @@ static void lsp_parse_number() {
 }
 
 
+/**
+ * Should be called with a single string.
+ *
+ * Will consume all expressions in the string and return them as a list.
+ */
 void lsp_parse() {
     lsp_fp_t rp = lsp_get_fp();
-    lsp_shrink_frame(0);
+    lsp_shrink_frame(1);
 
-    lsp_parser_advance();
-    lsp_parser_advance();
+    lsp_push_int(0);
 
-    // The first item on the stack is a list, ordered inner to outer, of
-    // pointers to the last cons cell in each list body.
+    // The next item on the stack, after the cursor, is a list, ordered inner
+    // to outer, of pointers to the last cons cell in each list body.  This is
+    // the parser stack.
     lsp_push_null();
 
     // The second item on the stack is a reversed list of elements in the
-    // current body.
+    // body of the current list in the parse stack.
     lsp_push_null();
+
+    // At the beginning of parsing there are no parent contexts so the parse
+    // stack is empty.  If an opening bracket is encountered, the current body
+    // is pushed on to the parse stack and a new body is started to parse the
+    // nested list.  On hitting the closing bracket, the body list will be
+    // reversed and added to the containing list in the parse stack.
 
     while (true) {
         lsp_consume_whitespace();
@@ -147,8 +167,8 @@ void lsp_parse() {
         if (next == '\0') {
             // Put the body list back in the right order and return it.
             lsp_reverse();
-            lsp_store(0);
-            lsp_pop_to(1);
+            lsp_store(-1);
+            lsp_pop_to(-2);
             lsp_restore_fp(rp);
             return;
         }
@@ -188,25 +208,6 @@ void lsp_parse() {
 
         // Replace the body with a new list containing the new expression as
         // its first element.
-        lsp_swp(-1);
         lsp_cons();
     }
-}
-
-void lsp_read(char *string) {
-    assert(string != NULL);
-
-    assert(input_buffer == NULL);
-    assert(input_cursor == 0);
-
-    // Set up input state.
-    input_buffer = string;
-    input_cursor = 0;
-
-    // Read.
-    lsp_parse();
-
-    // Tear down input state.
-    input_buffer = NULL;
-    input_cursor = 0;
 }
