@@ -145,6 +145,8 @@ void lsp_parse() {
     // reversed and added to the containing list in the parse stack.
 
     while (true) {
+        assert(lsp_stats_frame_size() == 4);
+
         lsp_consume_whitespace();
 
         char next = lsp_parser_next();
@@ -152,7 +154,6 @@ void lsp_parse() {
 
         if (next == '(') {
             // Push the current body onto the stack, consuming it.
-            lsp_swp(0);
             lsp_cons();
 
             // Replace it with a new empty list.
@@ -178,18 +179,18 @@ void lsp_parse() {
         if (next == ')') {
             // Unwind and reverse the current body list and store it as the
             // current expression.
-            lsp_dup(1);
+            lsp_dup(0);
             lsp_reverse();
 
             // Replace the body list with the next one down the parse stack.
-            lsp_dup(0);
+            lsp_dup(2);
             lsp_car();
-            lsp_store(1);
+            lsp_store(2);
 
-            // Pop the parse stack.
-            lsp_dup(0);
+            // Pop restored body list from the parse stack.
+            lsp_dup(2);
             lsp_cdr();
-            lsp_store(0);
+            lsp_store(3);
 
             lsp_parser_advance();
         } else if (next == '.') {
