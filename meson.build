@@ -51,6 +51,9 @@ test_suites = {
   'reader': [
     'empty',
     'int_single_digit',
+    'int_multiple_digit',
+    'empty_list',
+    'single_element_list',
   ],
 }
 
