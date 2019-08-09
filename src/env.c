@@ -36,21 +36,24 @@ void lsp_define() {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(3);
 
-    // Wrap the symbol and value at the top of the stack in a cons cell.
-    lsp_cons();
-
-    // Read the inner most scope from the environment and store it behind the
-    // cons cell for the new entry.
+    // Extract the current locals from the environment.
     lsp_dup(0);
     lsp_car();
 
-    // Create a new scope with the new binding as its first entry.
-    lsp_cons();
+    // Wrap the symbol and value in a new cons cell.
+    lsp_dup(-1);
+    lsp_dup(-2);
 
-    // Replace the old scope with the new one.
+    // Add the binding to the list of locals.
+    lsp_car();
+
+    // Replace the list of locals stored in the environment with the new list.
+    lsp_swp(1);
     lsp_set_car();
 
-    lsp_pop_to(1);
+    // Return the updated environment.
+    lsp_store(-1);
+    lsp_pop_to(-2);
     lsp_restore_fp(rp);
 }
 
