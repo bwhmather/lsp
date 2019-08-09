@@ -95,6 +95,59 @@ static void lsp_parse_symbol() {
 }
 
 
+static void lsp_parse_string() {
+    size_t buffer_size = 256;
+    char * buffer = (char *) malloc(buffer_size);
+    if (buffer == NULL) {
+        abort();
+    }
+    size_t cursor = 0;
+
+    lsp_parser_advance();
+
+    while (true) {
+        char next = lsp_parser_next();
+        char lookahead = lsp_parser_lookahead();
+
+        if (next == '\0') {
+            // Unexpected end of string.
+            abort();
+        }
+
+        if (cursor == buffer_size - 2) {
+            buffer_size += buffer_size / 2;
+            buffer = realloc(buffer, buffer_size);
+            if (buffer == NULL) {
+                abort();
+            }
+        }
+
+        if (next == '"') {
+            buffer[cursor] = '\0';
+
+            lsp_parser_advance();
+            break;
+        }
+
+        if (next == '\\') {
+            // Not implemented.
+            abort();
+            continue;
+        }
+
+        buffer[cursor] = next;
+        cursor++;
+
+        lsp_parser_advance();
+    }
+
+
+    lsp_push_string(buffer);
+
+    free(buffer);
+}
+
+
 static void lsp_parse_number() {
     bool negative = false;
     int accumulator = 0;
@@ -201,6 +254,8 @@ void lsp_parse() {
             (next == '-' && lookahead >= '0' && lookahead <= '9')
         ) {
             lsp_parse_number();
+        } else if (next == '"') {
+            lsp_parse_string();
         } else if (lsp_is_symbol_character(next)) {
             lsp_parse_symbol();
         } else {
