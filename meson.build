@@ -56,6 +56,8 @@ test_suites = {
     'single_element_list',
     'multi_element_list',
     'nested_list',
+    'string',
+    'string_escapes',
   ],
 }
 

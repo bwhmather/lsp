@@ -107,7 +107,6 @@ static void lsp_parse_string() {
 
     while (true) {
         char next = lsp_parser_next();
-        char lookahead = lsp_parser_lookahead();
 
         if (next == '\0') {
             // Unexpected end of string.
@@ -130,9 +129,39 @@ static void lsp_parse_string() {
         }
 
         if (next == '\\') {
-            // Not implemented.
-            abort();
-            continue;
+            lsp_parser_advance();
+            next = lsp_parser_next();
+
+            switch (next) {
+                case 'a':
+                    next = '\a';
+                    break;
+                case 'f':
+                    next = '\f';
+                    break;
+                case 'n':
+                    next = '\n';
+                    break;
+                case 'r':
+                    next = '\r';
+                    break;
+                case 't':
+                    next = '\t';
+                    break;
+                case '\\':
+                    next = '\\';
+                    break;
+                case '\'':
+                    next = '\'';
+                    break;
+                case '\"':
+                    next = '\"';
+                    break;
+                case 'x':
+                    abort();  // Not implemented.
+                default:
+                    abort();  // Not supported.
+            }
         }
 
         buffer[cursor] = next;
