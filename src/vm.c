@@ -576,7 +576,76 @@ bool lsp_is_truthy() {
     }
 }
 
-bool lsp_is_equal();
+bool lsp_is_equal() {
+    lsp_ref_t ref_a = lsp_get_at_offset(0);
+    lsp_ref_t ref_b = lsp_get_at_offset(1);
+
+    lsp_type_t type = lsp_heap_get_type(ref_a);
+
+    if (lsp_heap_get_type(ref_b) != type) {
+        return false;
+    }
+
+    if (type == LSP_TYPE_NULL) {
+        return true;
+    }
+
+    if (type == LSP_TYPE_CONS) {
+        // Check car.
+        lsp_dup(1);
+        lsp_car();
+        lsp_dup(1);
+        lsp_car();
+        if (!lsp_is_equal()) {
+            lsp_pop();
+            lsp_pop();
+            return false;
+        }
+
+        // Check cdr.
+        lsp_dup(1);
+        lsp_cdr();
+        lsp_dup(1);
+        lsp_cdr();
+        if (!lsp_is_equal()) {
+            lsp_pop();
+            lsp_pop();
+            return false;
+        }
+
+        return true;
+    }
+
+    if (type == LSP_TYPE_INT) {
+        int value_a = lsp_read_int(0);
+        int value_b = lsp_read_int(1);
+
+        return value_a == value_b;
+    }
+
+    if (type == LSP_TYPE_SYM) {
+        char *value_a = lsp_borrow_symbol(0);
+        char *value_b = lsp_borrow_symbol(1);
+
+        return strcmp(value_a, value_b) == 0;
+    }
+
+    if (type == LSP_TYPE_STR) {
+        char *value_a = lsp_borrow_string(0);
+        char *value_b = lsp_borrow_string(1);
+
+        return strcmp(value_a, value_b) == 0;
+    }
+
+    if (type == LSP_TYPE_OP) {
+        lsp_op_t value_a = lsp_read_op(0);
+        lsp_op_t value_b = lsp_read_op(1);
+
+        return value_a == value_b;
+    }
+
+    abort();  // unknown type.
+}
 
 size_t lsp_stats_frame_size() {
     assert(ref_frame_ptr >= 0);
