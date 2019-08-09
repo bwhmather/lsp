@@ -55,6 +55,7 @@ test_suites = {
     'empty_list',
     'single_element_list',
     'multi_element_list',
+    'nested_list',
   ],
 }
 
