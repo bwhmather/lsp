@@ -1,19 +1,41 @@
-language: c
 sudo: false
 
-compiler:
-  - clang
-  - gcc
+os: linux
+dist: xenial
 
-addons:
-  apt:
-    sources:
-      - sourceline: 'ppa:snaipewastaken/ppa'
-    packages:
-      - criterion-dev
- 
-install:
-  - make
+language: python
+python: 3.7
+
+matrix:
+  include:
+    - env: CC=gcc
+      install:
+        - meson setup build --warnlevel=3 --werror -Db_sanitize=address
+    - env: CC=gcc
+      install:
+        - meson setup build --warnlevel=3 --werror -Db_sanitize=undefined
+
+    - env: CC=clang
+      install:
+        - meson setup build --warnlevel=3 --werror -Db_sanitize=address -Db_lundef=false
+    - env: CC=clang
+      install:
+        - meson setup build --warnlevel=3 --werror -Db_sanitize=undefined -Db_lundef=false
+
+    - env: CC=gcc
+      install:
+        - pip install cpp-coveralls
+        - meson setup build --warnlevel=3 --werror -Db_coverage=true
+      after_success:
+        - coveralls -b ./build --verbose --gcov-options '\-lp' --include src --include tests
+
+before_install:
+  - wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip
+  - unzip ninja-linux.zip -d ninja
+  - export PATH="$PWD/ninja:$PATH"
+  - chmod 755 ninja/ninja
+  - pip install meson
 
 script:
-  - make test
+  - meson test -C build --print-errorlogs --timeout-multiplier=10
+
