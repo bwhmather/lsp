@@ -60,6 +60,9 @@ test_suites = {
     'string',
     'string_escapes',
   ],
+  'env': [
+    'push_empty',
+  ]
 }
 
 foreach suite, tests : test_suites
