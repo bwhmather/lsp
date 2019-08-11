@@ -5,8 +5,7 @@
 
 #include "lspt.h"
 
-
-int main(int argc, char **argv) {
+int main(void) {
     lsp_vm_init();
 
     lsp_push_int(2);

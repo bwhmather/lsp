@@ -6,7 +6,7 @@
 #include "lspt.h"
 
 
-int main(int argc, char **argv) {
+int main(void) {
     lsp_vm_init();
 
     lspt_assert_aborts(lsp_cons());
