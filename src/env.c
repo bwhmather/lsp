@@ -21,7 +21,6 @@ void lsp_push_scope(void) {
 
     // Store it as the first entry in a pair containing a list of bindings as
     // its car, and a parent scope as its cdr.
-    lsp_swp(-1);
     lsp_cons();
 }
 
