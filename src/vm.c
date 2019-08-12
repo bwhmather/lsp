@@ -106,16 +106,16 @@ static int ref_frame_ptr;
 /**
  * Internal forward declarations.
  */
-static void lsp_gc_internal_mark_heap();
-static void lsp_gc_internal_rebuild_offset_cache();
-static void lsp_gc_internal_compact();
-static void lsp_gc_internal_update_stack();
+static void lsp_gc_internal_mark_heap(void);
+static void lsp_gc_internal_rebuild_offset_cache(void);
+static void lsp_gc_internal_compact(void);
+static void lsp_gc_internal_update_stack(void);
 static lsp_cons_t *lsp_heap_get_cons(lsp_ref_t ref);
 static lsp_header_t *lsp_heap_get_header(lsp_ref_t ref);
 static lsp_type_t lsp_heap_get_type(lsp_ref_t ref);
 static char *lsp_heap_get_data(lsp_ref_t ref);
-static lsp_ref_t lsp_heap_alloc_null();
-static lsp_ref_t lsp_heap_alloc_cons();
+static lsp_ref_t lsp_heap_alloc_null(void);
+static lsp_ref_t lsp_heap_alloc_cons(void);
 static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size);
 static void lsp_push_ref(lsp_ref_t expr);
 static lsp_ref_t lsp_get_at_offset(int offset);
@@ -123,7 +123,7 @@ static void lsp_put_at_offset(lsp_ref_t value, int offset);
 static void lsp_push_null_terminated(lsp_type_t type, char *value);
 
 
-void lsp_vm_init() {
+void lsp_vm_init(void) {
     // TODO This doesn't work if overcommit is disabled.
     // Block size times maximum index.
     cons_heap = (lsp_cons_t *) malloc(CONS_HEAP_MAX * sizeof(lsp_cons_t));
@@ -148,23 +148,23 @@ void lsp_vm_init() {
 /**
  * Internal functions for actually performing a garbage collection.
  */
-static void lsp_gc_internal_mark_heap() {
+static void lsp_gc_internal_mark_heap(void) {
     // TODO
 }
 
-static void lsp_gc_internal_rebuild_offset_cache() {
+static void lsp_gc_internal_rebuild_offset_cache(void) {
     // TODO
 }
 
-static void lsp_gc_internal_compact() {
+static void lsp_gc_internal_compact(void) {
     // TODO
 }
 
-static void lsp_gc_internal_update_stack() {
+static void lsp_gc_internal_update_stack(void) {
     // TODO
 }
 
-void lsp_gc_collect() {
+void lsp_gc_collect(void) {
     lsp_gc_internal_mark_heap();
     lsp_gc_internal_rebuild_offset_cache();
     lsp_gc_internal_compact();
@@ -213,7 +213,7 @@ static char *lsp_heap_get_data(lsp_ref_t ref) {
 }
 
 
-static lsp_ref_t lsp_heap_alloc_null() {
+static lsp_ref_t lsp_heap_alloc_null(void) {
     // Null can only be initialised as the first item on the data-heap.
     assert(data_heap_ptr == 0);
 
@@ -235,7 +235,7 @@ static lsp_ref_t lsp_heap_alloc_null() {
 }
 
 
-static lsp_ref_t lsp_heap_alloc_cons() {
+static lsp_ref_t lsp_heap_alloc_cons(void) {
     assert(cons_heap_ptr < CONS_HEAP_MAX);
 
     // Construct a reference.
@@ -281,7 +281,7 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
 /**
  * Stack operations.
  */
-lsp_fp_t lsp_get_fp() {
+lsp_fp_t lsp_get_fp(void) {
     return (lsp_fp_t) ref_frame_ptr;
 }
 
@@ -349,11 +349,11 @@ static void lsp_put_at_offset(lsp_ref_t value, int offset) {
     ref_stack[abs_offset] = value;
 }
 
-void lsp_push_null() {
+void lsp_push_null(void) {
     lsp_push_ref(LSP_NULL);
 }
 
-void lsp_push_cons() {
+void lsp_push_cons(void) {
     lsp_ref_t expr = lsp_heap_alloc_cons();
     lsp_push_ref(expr);
 }
@@ -433,7 +433,7 @@ lsp_op_t lsp_read_op(int offset) {
     return *data;
 }
 
-void lsp_cons() {
+void lsp_cons(void) {
     lsp_ref_t car_ref = lsp_get_at_offset(0);
     lsp_ref_t cdr_ref = lsp_get_at_offset(1);
     lsp_ref_t cons_ref = lsp_heap_alloc_cons();
@@ -447,7 +447,7 @@ void lsp_cons() {
     lsp_push_ref(cons_ref);
 }
 
-void lsp_car() {
+void lsp_car(void) {
     lsp_ref_t cons_ref = lsp_get_at_offset(0);
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);
@@ -457,7 +457,7 @@ void lsp_car() {
     lsp_push_ref(car_ref);
 }
 
-void lsp_cdr() {
+void lsp_cdr(void) {
     lsp_ref_t cons_ref = lsp_get_at_offset(0);
 
     lsp_cons_t *cons = lsp_heap_get_cons(cons_ref);
@@ -467,7 +467,7 @@ void lsp_cdr() {
     lsp_push_ref(cdr_ref);
 }
 
-void lsp_set_car() {
+void lsp_set_car(void) {
     lsp_ref_t cons_ref = lsp_get_at_offset(0);
     lsp_ref_t car_ref = lsp_get_at_offset(1);
 
@@ -478,7 +478,7 @@ void lsp_set_car() {
     lsp_pop();
 }
 
-void lsp_set_cdr() {
+void lsp_set_cdr(void) {
     lsp_ref_t cons_ref = lsp_get_at_offset(0);
     lsp_ref_t cdr_ref = lsp_get_at_offset(1);
 
@@ -515,7 +515,7 @@ void lsp_pop_to(int offset) {
     ref_stack_ptr = abs_offset;
 }
 
-void lsp_pop() {
+void lsp_pop(void) {
     assert(ref_stack_ptr > ref_frame_ptr);
     ref_stack_ptr--;
 }
@@ -528,37 +528,37 @@ void lsp_swp(int offset) {
     lsp_put_at_offset(tgt, 0);
 }
 
-bool lsp_is_null() {
+bool lsp_is_null(void) {
     lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_NULL;
 }
 
-bool lsp_is_cons() {
+bool lsp_is_cons(void) {
     lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_CONS;
 }
 
-bool lsp_is_int() {
+bool lsp_is_int(void) {
     lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_INT;
 }
 
-bool lsp_is_symbol() {
+bool lsp_is_symbol(void) {
     lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_SYM;
 }
 
-bool lsp_is_string() {
+bool lsp_is_string(void) {
     lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_STR;
 }
 
-bool lsp_is_op() {
+bool lsp_is_op(void) {
     lsp_ref_t ref = lsp_get_at_offset(0);
     return lsp_heap_get_type(ref) == LSP_TYPE_OP;
 }
 
-bool lsp_is_truthy() {
+bool lsp_is_truthy(void) {
     lsp_ref_t ref = lsp_get_at_offset(-1);
     switch (lsp_heap_get_type(ref)) {
         case LSP_TYPE_NULL:
@@ -576,7 +576,7 @@ bool lsp_is_truthy() {
     }
 }
 
-bool lsp_is_equal() {
+bool lsp_is_equal(void) {
     lsp_ref_t ref_a = lsp_get_at_offset(0);
     lsp_ref_t ref_b = lsp_get_at_offset(1);
 
@@ -647,14 +647,14 @@ bool lsp_is_equal() {
     abort();  // unknown type.
 }
 
-size_t lsp_stats_frame_size() {
+size_t lsp_stats_frame_size(void) {
     assert(ref_frame_ptr >= 0);
     assert(ref_stack_ptr >= 0);
     assert(ref_frame_ptr <= ref_stack_ptr);
     return (size_t) (ref_stack_ptr - ref_frame_ptr);
 }
 
-size_t lsp_stats_stack_size() {
+size_t lsp_stats_stack_size(void) {
     assert(ref_stack_ptr >= 0);
     return (size_t) ref_stack_ptr;
 }

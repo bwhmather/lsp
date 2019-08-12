@@ -49,7 +49,7 @@ void lsp_store(int offset);
  * It is not safe to call `lsp_pop` while holding raw pointers to objects
  * stored on the heap.
  */
-void lsp_pop();
+void lsp_pop(void);
 
 /**
  * Pops all references up to and including the value at `offset` from the top
@@ -74,7 +74,7 @@ void lsp_swp(int offset);
  * Returns an opaque copy of the current value of the frame pointer that can
  * be used to restore it at a later stage.
  */
-lsp_fp_t lsp_get_fp();
+lsp_fp_t lsp_get_fp(void);
 
 /**
  * Advances the frame pointer so that the current frame only contains the
@@ -110,20 +110,20 @@ void lsp_restore_fp(lsp_fp_t fp);
  * Null
  * ----
  */
-void lsp_push_null();
-bool lsp_is_null();
+void lsp_push_null(void);
+bool lsp_is_null(void);
 
 
 /**
  * Foreign Function Interface
  * --------------------------
  */
-void lsp_push_op(void (* value)());
-bool lsp_is_op();
+void lsp_push_op(void (* value)(void));
+bool lsp_is_op(void);
 lsp_op_t lsp_read_op(int offset);
 
-bool lsp_is_truthy();
-bool lsp_is_equal();
+bool lsp_is_truthy(void);
+bool lsp_is_equal(void);
 
 
 /**
@@ -131,20 +131,20 @@ bool lsp_is_equal();
  * --------
  */
 void lsp_push_int(int value);
-bool lsp_is_int();
+bool lsp_is_int(void);
 int lsp_read_int(int offset);
 
-void lsp_int_add();
-void lsp_int_sub();
-void lsp_int_mul();
-void lsp_int_div();
+void lsp_int_add(void);
+void lsp_int_sub(void);
+void lsp_int_mul(void);
+void lsp_int_div(void);
 
 /**
  * Symbols
  * -------
  */
 void lsp_push_symbol(char *value);
-bool lsp_is_symbol();
+bool lsp_is_symbol(void);
 char *lsp_borrow_symbol(int offset);
 bool lsp_symbol_matches_literal(const char *value);
 
@@ -167,7 +167,7 @@ void lsp_push_string(char *value);
  * Arguments:
  *   - value: The value to check for stringiness.
  */
-bool lsp_is_string();
+bool lsp_is_string(void);
 
 /**
  * Returns a temporary reference to a null terminated string stored on the
@@ -191,12 +191,12 @@ char *lsp_borrow_string(int offset);
  * Returns:
  *   - length: The length of the string not including the terminating null.
  */
-void lsp_str_len();
+void lsp_str_len(void);
 
 /* Pops a pair of strings from the stack and returns a new one containing the
  * bytes of the first string followed by the bytes of the second.
  */
-void lsp_str_concat();
+void lsp_str_concat(void);
 
 /**
  * Cons cells
@@ -210,7 +210,7 @@ void lsp_str_concat();
  * Returns:
  *   - A new cons cell.
  */
-void lsp_push_cons();
+void lsp_push_cons(void);
 
 /**
  * Pops a value from the stack, returning true if it is a cons cell and false
@@ -219,7 +219,7 @@ void lsp_push_cons();
  * Arguments:
  *   - The value we want to check is a cons cell.
  */
-bool lsp_is_cons();
+bool lsp_is_cons(void);
 
 /**
  * Pops two values from the top of the stack and wraps them in a cons cell.
@@ -231,7 +231,7 @@ bool lsp_is_cons();
  * Returns:
  *   - The new cons cell.
  */
-void lsp_cons();
+void lsp_cons(void);
 
 /**
  * Returns the first value in a cons cell.
@@ -242,7 +242,7 @@ void lsp_cons();
  * Returns:
  *   - The first value in the cons cell.
  */
-void lsp_car();
+void lsp_car(void);
 
 /**
  * Returns the second value in a cons cell.
@@ -253,7 +253,7 @@ void lsp_car();
  * Returns:
  *   - The second value in the cons cell.
  */
-void lsp_cdr();
+void lsp_cdr(void);
 
 /**
  * Sets value pointed to by the car of an existing cons cell and pops both the
@@ -263,8 +263,8 @@ void lsp_cdr();
  *   - cons: The cons cell to modify.
  *   - value: The value to replace the first value in the cons cell with.
  */
-void lsp_set_car();
-void lsp_set_cdr();
+void lsp_set_car(void);
+void lsp_set_cdr(void);
 
 
 /**
@@ -291,9 +291,9 @@ void lsp_set_cdr();
  * Returns:
  *   - A new list of the return values..
  */
-void lsp_map();
-void lsp_fold();
-void lsp_reverse();
+void lsp_map(void);
+void lsp_fold(void);
+void lsp_reverse(void);
 
 
 /**
@@ -311,44 +311,44 @@ void lsp_reverse();
  * Returns:
  *   - A new scope datastructure.
  */
-void lsp_push_scope();
+void lsp_push_scope(void);
 
 /**
  * Creates a new binding in the inner-most scope of the current environment.
  */
-void lsp_define();
+void lsp_define(void);
 
 /**
  * Returns the value bound to a symbol in the current scope.
  *
  * Will abort if no binding exists.
  */
-void lsp_lookup();
-void lsp_set();
-void lsp_push_empty_env();
-void lsp_push_default_env();
+void lsp_lookup(void);
+void lsp_set(void);
+void lsp_push_empty_env(void);
+void lsp_push_default_env(void);
 
 /**
  * Core Operations
  * ===============
  * The core of the interpreter.
  */
-void lsp_abort();
+void lsp_abort(void);
 
-void lsp_vm_init();
+void lsp_vm_init(void);
 
-void lsp_parse();
+void lsp_parse(void);
 
-void lsp_call();
-void lsp_eval();
+void lsp_call(int nargs);
+void lsp_eval(void);
 
-void lsp_print();
+void lsp_print(void);
 
 /**
  * Interpreter information.
  */
-size_t lsp_stats_frame_size();
-size_t lsp_stats_stack_size();
+size_t lsp_stats_frame_size(void);
+size_t lsp_stats_stack_size(void);
 
 
 

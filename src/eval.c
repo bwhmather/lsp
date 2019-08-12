@@ -24,7 +24,7 @@ static void lsp_unpack(int n) {
  * Evaluates the expression passed as its second argument in the environment
  * passed as its first.
  */
-static void lsp_eval_inner() {
+static void lsp_eval_inner(void) {
     if (lsp_dup(-1), lsp_is_symbol()) {
         // Expression is a name identifying a variable that can be loaded
         // from the environment.  `lookup` will pop the environment and symbol
@@ -248,7 +248,7 @@ static void lsp_eval_inner() {
 }
 
 
-void lsp_eval() {
+void lsp_eval(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(2);
 

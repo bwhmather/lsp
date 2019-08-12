@@ -5,7 +5,7 @@
 #include <assert.h>
 
 
-static char lsp_parser_next() {
+static char lsp_parser_next(void) {
     const char *buffer = lsp_borrow_string(-1);
     int cursor = lsp_read_int(-2);
 
@@ -13,7 +13,7 @@ static char lsp_parser_next() {
 }
 
 
-static char lsp_parser_lookahead() {
+static char lsp_parser_lookahead(void) {
     const char *buffer = lsp_borrow_string(-1);
     int cursor = lsp_read_int(-2);
 
@@ -25,7 +25,7 @@ static char lsp_parser_lookahead() {
 }
 
 
-static void lsp_parser_advance() {
+static void lsp_parser_advance(void) {
     const char *buffer = lsp_borrow_string(-1);
     int cursor = lsp_read_int(-2);
 
@@ -36,7 +36,7 @@ static void lsp_parser_advance() {
 }
 
 
-static void lsp_consume_whitespace() {
+static void lsp_consume_whitespace(void) {
     char next = lsp_parser_next();
     while (next == ' ' || next == '\n' || next == '\t') {
         lsp_parser_advance();
@@ -61,7 +61,7 @@ static bool lsp_is_symbol_character(char next) {
 }
 
 
-static void lsp_parse_symbol() {
+static void lsp_parse_symbol(void) {
     size_t buffer_size = 256;
     char *buffer = (char *) malloc(buffer_size);
     if (buffer == NULL) {
@@ -95,7 +95,7 @@ static void lsp_parse_symbol() {
 }
 
 
-static void lsp_parse_string() {
+static void lsp_parse_string(void) {
     size_t buffer_size = 256;
     char * buffer = (char *) malloc(buffer_size);
     if (buffer == NULL) {
@@ -177,7 +177,7 @@ static void lsp_parse_string() {
 }
 
 
-static void lsp_parse_number() {
+static void lsp_parse_number(void) {
     bool negative = false;
     int accumulator = 0;
 
@@ -205,7 +205,7 @@ static void lsp_parse_number() {
  *
  * Will consume all expressions in the string and return them as a list.
  */
-void lsp_parse() {
+void lsp_parse(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(1);
 

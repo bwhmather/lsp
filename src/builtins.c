@@ -8,31 +8,31 @@
 /**
  * Integer operations.
  */
-void lsp_int_add() {
+void lsp_int_add(void) {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a + b);
 }
 
-void lsp_int_sub() {
+void lsp_int_sub(void) {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a - b);
 }
 
-void lsp_int_mul() {
+void lsp_int_mul(void) {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a * b);
 }
 
-void lsp_int_div() {
+void lsp_int_div(void) {
     int a = lsp_read_int(-2);
     int b = lsp_read_int(-1);
     lsp_push_int(a / b);
 }
 
-void lsp_map() {
+void lsp_map(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(2);
 
@@ -87,7 +87,7 @@ void lsp_map() {
  * - init
  * - input
  */
-void lsp_fold() {
+void lsp_fold(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(3);
 
@@ -122,7 +122,7 @@ void lsp_fold() {
 }
 
 
-void lsp_reverse() {
+void lsp_reverse(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(1);
 
@@ -148,7 +148,7 @@ void lsp_reverse() {
 
 
 
-void lsp_print() {
+void lsp_print(void) {
     if (lsp_dup(-1), lsp_is_null()) {
         printf("()");
         return;

@@ -5,7 +5,7 @@
 #include <string.h>
 
 
-void lsp_push_empty_env() {
+void lsp_push_empty_env(void) {
     lsp_push_null();
     lsp_push_null();
     lsp_cons();
@@ -15,7 +15,7 @@ void lsp_push_empty_env() {
  * :param cons env:
  *     The environment to wrap in a new scope.
  */
-void lsp_push_scope() {
+void lsp_push_scope(void) {
     // Create an empty list of bindings.
     lsp_push_null();
 
@@ -32,7 +32,7 @@ void lsp_push_scope() {
  *   - symbol
  *   - value
  */
-void lsp_define() {
+void lsp_define(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(3);
 
@@ -63,7 +63,7 @@ void lsp_define() {
  *   - environment
  *   - symbol
  */
-void lsp_lookup() {
+void lsp_lookup(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(2);
 
@@ -92,7 +92,8 @@ void lsp_lookup() {
         char *target = lsp_borrow_symbol(0);
         char *current = lsp_borrow_symbol(1);
         int cmp_result = strcmp(current, target);
-        lsp_pop(-2);
+        lsp_pop();
+        lsp_pop();
 
         if (cmp_result == 0) {
             // If equal then we have found what we are looking for.  Extract
@@ -131,7 +132,7 @@ void lsp_lookup() {
  *   - symbol
  *   - value
  */
-void lsp_set() {
+void lsp_set(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(3);
 
@@ -156,7 +157,8 @@ void lsp_set() {
         char *target = lsp_borrow_symbol(0);
         char *current = lsp_borrow_symbol(1);
         int cmp_result = strcmp(current, target);
-        lsp_pop(-2);
+        lsp_pop();
+        lsp_pop();
 
         if (cmp_result == 0) {
             // Load a reference to the binding and replace its cdr with the new
@@ -198,7 +200,7 @@ static void lsp_bind(char *symbol, lsp_op_t operation) {
 }
 
 
-void lsp_push_default_env() {
+void lsp_push_default_env(void) {
     lsp_push_empty_env();
 
     lsp_bind("+", &lsp_int_add);
