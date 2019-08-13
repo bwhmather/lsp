@@ -63,6 +63,7 @@ test_suites = {
   'env': [
     'push_empty',
     'push_scope',
+    'define',
   ]
 }
 
