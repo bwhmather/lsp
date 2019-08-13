@@ -596,9 +596,10 @@ bool lsp_is_equal(void) {
         lsp_car();
         lsp_dup(1);
         lsp_car();
-        if (!lsp_is_equal()) {
-            lsp_pop();
-            lsp_pop();
+        bool cars_equal = lsp_is_equal();
+        lsp_pop();
+        lsp_pop();
+        if (!cars_equal) {
             return false;
         }
 
@@ -607,9 +608,10 @@ bool lsp_is_equal(void) {
         lsp_cdr();
         lsp_dup(1);
         lsp_cdr();
-        if (!lsp_is_equal()) {
-            lsp_pop();
-            lsp_pop();
+        bool cdrs_equal = lsp_is_equal();
+        lsp_pop();
+        lsp_pop();
+        if (!cdrs_equal) {
             return false;
         }
 
