@@ -36,23 +36,24 @@ void lsp_define(void) {
     lsp_shrink_frame(3);
 
     // Extract the current locals from the environment.
-    lsp_dup(0);
+    lsp_dup(-3);
     lsp_car();
 
     // Wrap the symbol and value in a new cons cell.
     lsp_dup(-1);
     lsp_dup(-2);
+    lsp_cons();
 
     // Add the binding to the list of locals.
-    lsp_car();
+    lsp_cons();
 
     // Replace the list of locals stored in the environment with the new list.
     lsp_swp(1);
     lsp_set_car();
 
-    // Return the updated environment.
-    lsp_store(-1);
-    lsp_pop_to(-2);
+    // Environment has been mutated in place, so don't return.
+    lsp_pop_to(-1);
+
     lsp_restore_fp(rp);
 }
 
