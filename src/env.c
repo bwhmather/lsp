@@ -68,7 +68,6 @@ void lsp_lookup(void) {
     lsp_shrink_frame(2);
 
     // Check that the current environment is not NULL.
-    lsp_dup(0);
     if (lsp_is_null()) {
         assert(false);
         // lsp_abort("undefined variable");
@@ -79,20 +78,18 @@ void lsp_lookup(void) {
     lsp_car();
 
     // Search the list for the symbol.
-    while (lsp_dup(-1), lsp_is_cons()) {
+    while (lsp_is_cons()) {
+        assert(lsp_stats_frame_size() == 3);
+
         // Read the symbol from the first entry.
-        lsp_dup(-1);
+        lsp_dup(0);
         lsp_car();  // The first binding in the list.
         lsp_car();  // The key for the binding.
 
-        // Copy the target symbol.
-        lsp_dup(1);
-
         // Compare it to the symbol we are interested in.
-        char *target = lsp_borrow_symbol(0);
-        char *current = lsp_borrow_symbol(1);
+        char *target = lsp_borrow_symbol(-1);
+        char *current = lsp_borrow_symbol(0);
         int cmp_result = strcmp(current, target);
-        lsp_pop();
         lsp_pop();
 
         if (cmp_result == 0) {
@@ -102,9 +99,12 @@ void lsp_lookup(void) {
             lsp_car();  // The first binding in the list.
             lsp_cdr();  // The value from the binding.
 
-            lsp_store(0);
-            lsp_pop_to(1);
+            lsp_store(-1);
+            lsp_pop();
+
             lsp_restore_fp(rp);
+
+            return;
         }
 
         // Advance to the next entry in the list.
@@ -112,17 +112,14 @@ void lsp_lookup(void) {
     }
 
     // Remove the empty inner scope from the stack.
-    lsp_pop_to(2);
+    lsp_pop();
 
     // Replace the current environment with the parent environment.
-    lsp_dup(0);
     lsp_cdr();
-    lsp_store(0);
 
     // Search for the symbol in the parent environment.
     lsp_lookup();
 
-    lsp_pop_to(1);
     lsp_restore_fp(rp);
 }
 
