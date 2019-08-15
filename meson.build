@@ -64,6 +64,7 @@ test_suites = {
     'push_empty',
     'push_scope',
     'define',
+    'lookup',
   ]
 }
 
