@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lsp.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
@@ -52,4 +54,67 @@ static inline void lspt_test_on_sigabrt(int signal) {
         abort();                                                            \
     }                                                                       \
 } while(0)
+
+static inline void lspt_assert_equal(void) {
+    // We loop to compare lists without overflowing the c stack.
+    while (true) {
+        if (lsp_is_null()) {
+            lsp_dup(1);
+            lspt_assert(lsp_is_null());
+            lsp_pop();
+
+        } else if (lsp_is_cons()) {
+            // Check car.
+            lsp_dup(1);
+            lsp_car();
+            lsp_dup(1);
+            lsp_car();
+            // We can't avoid recursing to compare the cars
+            lspt_assert_equal();
+            lsp_pop();
+            lsp_pop();
+
+            // Replace the two cons cells with their cdrs.
+            lsp_dup(1);
+            lsp_cdr();
+            lsp_dup(1);
+            lsp_cdr();
+            lsp_store(2);
+            lsp_store(2);
+
+            // Loop to compare the cdrs.
+            continue;
+
+        } else if (lsp_is_int()) {
+            int value_a = lsp_read_int(0);
+            int value_b = lsp_read_int(1);
+
+            lspt_assert(value_a == value_b);
+
+        } else if (lsp_is_symbol()) {
+            char *value_a = lsp_borrow_symbol(0);
+            char *value_b = lsp_borrow_symbol(1);
+
+            lspt_assert(strcmp(value_a, value_b) == 0);
+
+        } else if (lsp_is_string()) {
+            char *value_a = lsp_borrow_string(0);
+            char *value_b = lsp_borrow_string(1);
+
+            lspt_assert(strcmp(value_a, value_b) == 0);
+
+        } else if (lsp_is_op()) {
+            lsp_op_t value_a = lsp_read_op(0);
+            lsp_op_t value_b = lsp_read_op(1);
+
+            lspt_assert(value_a == value_b);
+
+        } else {
+            // Unknown type.
+            lspt_assert(false);
+        }
+
+        return;
+    }
+}
 
