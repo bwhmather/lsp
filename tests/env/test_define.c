@@ -26,7 +26,7 @@ int main(void) {
     lsp_cons();
     lsp_cons();
 
-    lspt_assert(lsp_is_equal());
+    lspt_assert_equal();
 
     return 0;
 }
