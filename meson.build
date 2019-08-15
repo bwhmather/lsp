@@ -65,6 +65,9 @@ test_suites = {
     'push_scope',
     'define',
     'lookup',
+    'lookup_older',
+    'lookup_outer',
+    'lookup_shadowed',
   ]
 }
 
