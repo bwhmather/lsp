@@ -68,6 +68,7 @@ test_suites = {
     'lookup_older',
     'lookup_outer',
     'lookup_shadowed',
+    'set',
   ]
 }
 
