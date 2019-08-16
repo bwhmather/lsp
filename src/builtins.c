@@ -147,70 +147,76 @@ void lsp_reverse(void) {
 }
 
 
-
 void lsp_print(void) {
-    if (lsp_dup(-1), lsp_is_null()) {
-        printf("()");
-        return;
-    }
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(1);
 
-    if (lsp_dup(-1), lsp_is_cons()) {
+    if (lsp_is_null()) {
+        printf("()");
+
+        lsp_pop();
+
+    } else if (lsp_is_cons()) {
         printf("(");
 
-        while (lsp_dup(-1), lsp_is_cons()) {
+        // Print the first element.
+        lsp_dup(0);
+        lsp_car();
+        lsp_print();
+
+        lsp_cdr();
+
+        while (lsp_is_cons()) {
+            printf(" ");
+
             // Print the next element in the array.
-            lsp_dup(-1);
+            lsp_dup(0);
             lsp_car();
             lsp_print();
 
             // Move to the next element.
             lsp_cdr();
-
-            // If there is more to come, print a separator.
-            if (lsp_dup(-1), lsp_is_cons()) {
-                printf(" ");
-            }
         }
 
         // If the list is terminated with something other than null, print it
         // after printing a dot.
-        if (lsp_dup(-1), !lsp_is_null()) {
+        if (!lsp_is_null()) {
             printf(" . ");
-            lsp_dup(-1);
             lsp_print();
+        } else {
+            lsp_pop();
         }
-        lsp_pop();
 
         printf(")");
 
-        return;
-    }
-
-    if (lsp_dup(-1), lsp_is_int()) {
+    } else if (lsp_is_int()) {
         int value = lsp_read_int(0);
         printf("%i", value);
-        return;
-    }
 
-    if (lsp_dup(-1), lsp_is_symbol()) {
+        lsp_pop();
+
+    } else if (lsp_is_symbol()) {
         char *str = lsp_borrow_symbol(0);
         printf("%s", str);
-        lsp_pop();
-        return;
-    }
 
-    if (lsp_dup(-1), lsp_is_string()) {
+        lsp_pop();
+
+    } else if (lsp_is_string()) {
         char *str = lsp_borrow_string(0);
         printf("\"%s\"", str);  // TODO escape
-        lsp_pop();
-        return;
-    }
 
-    if (lsp_dup(-1), lsp_is_op()) {
         lsp_pop();
+
+    } else if (lsp_is_op()) {
         printf("<builtin>");
-        return;
-    }
-}
 
+        lsp_pop();
+
+    } else {
+        assert(false);
+    }
+
+    assert(lsp_stats_frame_size() == 0);
+    lsp_restore_fp(rp);
+}
 
