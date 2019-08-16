@@ -133,40 +133,42 @@ void lsp_set(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(3);
 
-    lsp_dup(0);
+    // Check that the current environment is not NULL.
     if (lsp_is_null()) {
         assert(false);
-        //lsp_abort("undefined variable");
+        // lsp_abort("undefined variable");
     }
 
-    // Extract the list of local bindings and save it at the top of the stack.
+    // Extract the list of local bindings and save at the top of the stack.
     lsp_dup(0);
     lsp_car();
 
-    // Search the list for the symbol we want o edit.
-    while (lsp_dup(-1), lsp_is_cons()) {
+    // Search the list for the symbol.
+    while (lsp_is_cons()) {
+        assert(lsp_stats_frame_size() == 4);
+
         // Read the symbol from the first entry.
-        lsp_dup(-1);
+        lsp_dup(0);
         lsp_car();  // The first binding in the list.
         lsp_car();  // The key for the binding.
 
         // Compare it to the symbol we are interested in.
-        char *target = lsp_borrow_symbol(0);
-        char *current = lsp_borrow_symbol(1);
+        char *target = lsp_borrow_symbol(-2);
+        char *current = lsp_borrow_symbol(0);
         int cmp_result = strcmp(current, target);
-        lsp_pop();
         lsp_pop();
 
         if (cmp_result == 0) {
             // Load a reference to the binding and replace its cdr with the new
             // value.
             lsp_car();
-            lsp_dup(2);
+            lsp_store(2);
+            lsp_pop();
 
-            // Return null.
-            lsp_pop_to(0);
-            lsp_push_null();
+            lsp_set_cdr();
+
             lsp_restore_fp(rp);
+
             return;
         }
 
@@ -175,15 +177,13 @@ void lsp_set(void) {
     }
 
     // Remove the empty inner scope from the stack.
-    lsp_pop_to(3);
+    lsp_pop();
 
     // Replace the current environment with the parent environment.
-    lsp_dup(0);
     lsp_cdr();
-    lsp_store(0);
 
     // Search for the symbol in the parent environment.
-    lsp_set();
+    lsp_lookup();
 
     lsp_restore_fp(rp);
 }
