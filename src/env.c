@@ -188,6 +188,18 @@ void lsp_set(void) {
     lsp_restore_fp(rp);
 }
 
+/**
+ * Extracts the innermost binding for each of the requested variables into the
+ * inner scope of a new env.
+ *
+ * Arguments:
+ *   - A list of symbols to capture.
+ *   - The environment to capture them from.
+ */
+static void lsp_capture(void) {
+    abort();
+}
+
 
 static void lsp_bind(char *symbol, lsp_op_t operation) {
     lsp_dup(-1);

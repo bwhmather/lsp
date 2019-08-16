@@ -327,6 +327,7 @@ void lsp_lookup(void);
 void lsp_set(void);
 void lsp_push_empty_env(void);
 void lsp_push_default_env(void);
+void lsp_capture(void);
 
 /**
  * Core Operations
