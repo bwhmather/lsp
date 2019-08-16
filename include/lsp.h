@@ -343,6 +343,7 @@ void lsp_call(int nargs);
 void lsp_eval(void);
 
 void lsp_print(void);
+void lsp_print_stack(void);
 
 /**
  * Interpreter information.

@@ -220,3 +220,15 @@ void lsp_print(void) {
     lsp_restore_fp(rp);
 }
 
+void lsp_print_stack(void) {
+    int frame_size = lsp_stats_frame_size();
+
+    printf("\n=== Stack ===\n");
+    for (int i=0; i < frame_size; i++) {
+        printf("%i: ", i);
+        lsp_dup(i);
+        lsp_print();
+        printf("\n");
+    }
+    printf("-------------\n");
+}
