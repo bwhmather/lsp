@@ -1,0 +1,69 @@
+LSP
+===
+
+[![Build Status](https://travis-ci.org/bwhmather/lsp.svg?branch=develop)](https://travis-ci.org/bwhmather/lsp)
+
+A simple tree walking interpreter for a scheme like language.
+
+Not finished, and certainly not something you should ever consider using in
+production.
+
+
+Design Notes
+------------
+
+
+### VM Operations
+
+Functions in the VM API are split, by convention, into four categories:
+
+  - Stack operations.  These mutate the stack, but leave the pointed to values
+    unchanged.
+  - Read operations.  These allow values on the stack to be inspected.  They
+    should all take a stack offset.  Read operations that return a copy should
+    be named `lsp_read_{type}`.  Read operations that return a reference should
+    be named `lsp_borrow_{type}`, and have a matching `lsp_release_type`
+    function.  Type checks should be called `lsp_is_{type}`.
+  - Constructors.  These should take a C value, copy it to the heap, and push a
+    reference on to the stack.  Constructors names should all match the format
+    `lsp_push_{type}`.
+  - Write operations.  These should mutate a value on the heap, consuming all
+    of their arguments from the stack.
+
+
+### The Stack
+
+The reference at the frame pointer is zero.
+Positive offsets count upwards from the frame pointer.
+Negative offsets count downwards from the stack pointer.
+Minus one points to the item at the top of the stack.
+
+Trying to read a value to an offset that is out of range will abort the
+process.
+Functions should check the size of the current frame before doing anything.
+
+
+Attempting to expand the stack beyond available space will abort the process.
+Functions can ensure that there is enough space in advance by calling
+`lsp_reserve`
+
+
+Arguments are pushed from right to left.  Earlier arguments appear higher on
+the stack, so `(cons a b)` will be executed by pushing `b`, then `a`, then
+finally `cons` onto the stack before invoking `lsp_call`.
+
+
+### Callables
+
+Callables come in two forms:
+  - A simple builtin.  The number of arguments is determined by the size of the
+    frame.  Returns a single value on the stack.
+  - A pair containing a callable and an environment.  The environment is pushed
+    on to the top of the stack, followed by the callable.  The interpreter will
+    then re-attempt the call.
+
+Lambdas are no different from any other callable except for that the builtin is
+a special function, `%call-lambda`, that binds the arguments to a scope and
+then evaluates the body.
+
+Functions can return a non-zero error code on the C stack to abort execution.
