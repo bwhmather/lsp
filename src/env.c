@@ -196,7 +196,7 @@ void lsp_set(void) {
  *   - A list of symbols to capture.
  *   - The environment to capture them from.
  */
-static void lsp_capture(void) {
+void lsp_capture(void) {
     abort();
 }
 
