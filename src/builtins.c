@@ -9,26 +9,34 @@
  * Integer operations.
  */
 void lsp_int_add(void) {
-    int a = lsp_read_int(-2);
-    int b = lsp_read_int(-1);
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_pop();
+    lsp_pop();
     lsp_push_int(a + b);
 }
 
 void lsp_int_sub(void) {
-    int a = lsp_read_int(-2);
-    int b = lsp_read_int(-1);
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_pop();
+    lsp_pop();
     lsp_push_int(a - b);
 }
 
 void lsp_int_mul(void) {
-    int a = lsp_read_int(-2);
-    int b = lsp_read_int(-1);
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_pop();
+    lsp_pop();
     lsp_push_int(a * b);
 }
 
 void lsp_int_div(void) {
-    int a = lsp_read_int(-2);
-    int b = lsp_read_int(-1);
+    int a = lsp_read_int(0);
+    int b = lsp_read_int(1);
+    lsp_pop();
+    lsp_pop();
     lsp_push_int(a / b);
 }
 
