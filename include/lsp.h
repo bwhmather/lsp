@@ -143,10 +143,10 @@ void lsp_int_div(void);
  * Symbols
  * -------
  */
-void lsp_push_symbol(char *value);
+void lsp_push_symbol(char const *value);
 bool lsp_is_symbol(void);
 char const *lsp_borrow_symbol(int offset);
-bool lsp_symbol_matches_literal(const char *value);
+bool lsp_symbol_matches_literal(char const *value);
 
 
 /**
@@ -158,7 +158,7 @@ bool lsp_symbol_matches_literal(const char *value);
  * Copies a null terminated string onto the heap and pushes a reference to it
  * onto the stack.
  */
-void lsp_push_string(char *value);
+void lsp_push_string(char const *value);
 
 /**
  * Pops a reference from the top of the stack, returning true if it points to a

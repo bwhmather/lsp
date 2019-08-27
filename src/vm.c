@@ -120,7 +120,7 @@ static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size);
 static void lsp_push_ref(lsp_ref_t expr);
 static lsp_ref_t lsp_get_at_offset(int offset);
 static void lsp_put_at_offset(lsp_ref_t value, int offset);
-static void lsp_push_null_terminated(lsp_type_t type, char *value);
+static void lsp_push_null_terminated(lsp_type_t type, char const *value);
 
 
 void lsp_vm_init(void) {
@@ -370,7 +370,7 @@ void lsp_push_int(int value) {
     lsp_push_ref(ref);
 }
 
-static void lsp_push_null_terminated(lsp_type_t type, char *value) {
+static void lsp_push_null_terminated(lsp_type_t type, char const *value) {
     // Space required is equal to the length of the string plus one for the
     // terminating null byte.
     size_t size = strlen(value) + 1;
@@ -387,11 +387,11 @@ static void lsp_push_null_terminated(lsp_type_t type, char *value) {
     lsp_push_ref(ref);
 }
 
-void lsp_push_symbol(char *value) {
+void lsp_push_symbol(char const *value) {
     lsp_push_null_terminated(LSP_TYPE_SYM, value);
 }
 
-void lsp_push_string(char *value) {
+void lsp_push_string(char const *value) {
     lsp_push_null_terminated(LSP_TYPE_STR, value);
 }
 
