@@ -92,14 +92,14 @@ static inline void lspt_assert_equal(void) {
             lspt_assert(value_a == value_b);
 
         } else if (lsp_is_symbol()) {
-            char *value_a = lsp_borrow_symbol(0);
-            char *value_b = lsp_borrow_symbol(1);
+            char const *value_a = lsp_borrow_symbol(0);
+            char const *value_b = lsp_borrow_symbol(1);
 
             lspt_assert(strcmp(value_a, value_b) == 0);
 
         } else if (lsp_is_string()) {
-            char *value_a = lsp_borrow_string(0);
-            char *value_b = lsp_borrow_string(1);
+            char const *value_a = lsp_borrow_string(0);
+            char const *value_b = lsp_borrow_string(1);
 
             lspt_assert(strcmp(value_a, value_b) == 0);
 

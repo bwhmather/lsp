@@ -87,8 +87,8 @@ void lsp_lookup(void) {
         lsp_car();  // The key for the binding.
 
         // Compare it to the symbol we are interested in.
-        char *target = lsp_borrow_symbol(-1);
-        char *current = lsp_borrow_symbol(0);
+        char const *target = lsp_borrow_symbol(-1);
+        char const *current = lsp_borrow_symbol(0);
         int cmp_result = strcmp(current, target);
         lsp_pop();
 
@@ -153,8 +153,8 @@ void lsp_set(void) {
         lsp_car();  // The key for the binding.
 
         // Compare it to the symbol we are interested in.
-        char *target = lsp_borrow_symbol(-2);
-        char *current = lsp_borrow_symbol(0);
+        char const *target = lsp_borrow_symbol(-2);
+        char const *current = lsp_borrow_symbol(0);
         int cmp_result = strcmp(current, target);
         lsp_pop();
 

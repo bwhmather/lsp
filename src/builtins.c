@@ -204,13 +204,13 @@ void lsp_print(void) {
         lsp_pop();
 
     } else if (lsp_is_symbol()) {
-        char *str = lsp_borrow_symbol(0);
+        char const *str = lsp_borrow_symbol(0);
         printf("%s", str);
 
         lsp_pop();
 
     } else if (lsp_is_string()) {
-        char *str = lsp_borrow_string(0);
+        char const *str = lsp_borrow_string(0);
         printf("\"%s\"", str);  // TODO escape
 
         lsp_pop();

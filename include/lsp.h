@@ -145,7 +145,7 @@ void lsp_int_div(void);
  */
 void lsp_push_symbol(char *value);
 bool lsp_is_symbol(void);
-char *lsp_borrow_symbol(int offset);
+char const *lsp_borrow_symbol(int offset);
 bool lsp_symbol_matches_literal(const char *value);
 
 
@@ -179,7 +179,7 @@ bool lsp_is_string(void);
  *     Calling any lsp function other than `lsp_borrow_string` is could result
  *     in a garbage collection that would invalidate the reference..
  */
-char *lsp_borrow_string(int offset);
+char const *lsp_borrow_string(int offset);
 
 /**
  * Pops a string and replaces it with an integer who's value is the same as the

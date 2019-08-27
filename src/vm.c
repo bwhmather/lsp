@@ -414,13 +414,13 @@ int lsp_read_int(int offset) {
     return *data;
 }
 
-char *lsp_borrow_symbol(int offset) {
+char const *lsp_borrow_symbol(int offset) {
     lsp_ref_t ref = lsp_get_at_offset(offset);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_SYM);
     return lsp_heap_get_data(ref);
 }
 
-char *lsp_borrow_string(int offset) {
+char const *lsp_borrow_string(int offset) {
     lsp_ref_t ref = lsp_get_at_offset(offset);
     assert(lsp_heap_get_type(ref) == LSP_TYPE_STR);
     return lsp_heap_get_data(ref);

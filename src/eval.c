@@ -31,6 +31,7 @@ static void lsp_eval_inner(void) {
         // from the stack and replace them with the correct value.
         lsp_lookup();
         return;
+
     } else if (lsp_dup(-1), lsp_is_cons()) {
         // Expression is a list representing either a special form or an
         // invocation of a procedure or built-in operator.
@@ -45,7 +46,7 @@ static void lsp_eval_inner(void) {
 
             lsp_dup(-1);
             lsp_car();
-            char *sym = lsp_borrow_symbol(0);
+            char const *sym = lsp_borrow_symbol(0);
             if (strcmp(sym, "if") == 0) {
                 // Strip the `if` from the top of the stack and the beginning
                 // of the current expression.
