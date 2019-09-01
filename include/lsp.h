@@ -111,7 +111,7 @@ void lsp_restore_fp(lsp_fp_t fp);
  * ----
  */
 void lsp_push_null(void);
-bool lsp_is_null(void);
+bool lsp_is_null(int offset);
 
 
 /**
@@ -119,7 +119,7 @@ bool lsp_is_null(void);
  * --------------------------
  */
 void lsp_push_op(void (* value)(void));
-bool lsp_is_op(void);
+bool lsp_is_op(int offset);
 lsp_op_t lsp_read_op(int offset);
 
 bool lsp_is_truthy(void);
@@ -131,7 +131,7 @@ bool lsp_is_equal(void);
  * --------
  */
 void lsp_push_int(int value);
-bool lsp_is_int(void);
+bool lsp_is_int(int offset);
 int lsp_read_int(int offset);
 
 void lsp_int_add(void);
@@ -144,7 +144,7 @@ void lsp_int_div(void);
  * -------
  */
 void lsp_push_symbol(char const *value);
-bool lsp_is_symbol(void);
+bool lsp_is_symbol(int offset);
 char const *lsp_borrow_symbol(int offset);
 bool lsp_symbol_matches_literal(char const *value);
 
@@ -167,7 +167,7 @@ void lsp_push_string(char const *value);
  * Arguments:
  *   - value: The value to check for stringiness.
  */
-bool lsp_is_string(void);
+bool lsp_is_string(int offset);
 
 /**
  * Returns a temporary reference to a null terminated string stored on the
@@ -219,7 +219,7 @@ void lsp_push_cons(void);
  * Arguments:
  *   - The value we want to check is a cons cell.
  */
-bool lsp_is_cons(void);
+bool lsp_is_cons(int offset);
 
 /**
  * Pops two values from the top of the stack and wraps them in a cons cell.

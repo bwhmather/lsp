@@ -15,13 +15,13 @@ int main(void) {
 
     lsp_dup(0);
     lsp_car();
-    lspt_assert(lsp_is_null());
+    lspt_assert(lsp_is_null(0));
     lsp_pop();
 
     lsp_cdr();
 
     lsp_dup(0);
-    lspt_assert(lsp_is_null());
+    lspt_assert(lsp_is_null(0));
     lsp_pop();
 
     return 0;

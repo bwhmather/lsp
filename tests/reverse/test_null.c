@@ -14,7 +14,7 @@ int main(void) {
     lsp_reverse();
 
     lspt_assert(lsp_stats_frame_size() == 1);
-    lspt_assert(lsp_is_null());
+    lspt_assert(lsp_is_null(0));
 
     return 0;
 }

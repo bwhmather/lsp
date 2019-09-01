@@ -7,7 +7,7 @@
  * its arguments.
  */
 void lsp_call(int nargs) {
-    if (lsp_dup(-1), lsp_is_op()) {
+    if (lsp_dup(-1), lsp_is_op(0)) {
         // Pop the operation from the top of the stack.
         lsp_op_t op = lsp_read_op(0);
         lsp_pop();
@@ -21,7 +21,7 @@ void lsp_call(int nargs) {
         return;
     }
 
-    if (lsp_dup(-1), lsp_is_cons()) {
+    if (lsp_dup(-1), lsp_is_cons(0)) {
         assert(false);
         // // Break the callable up into its component pieces.
         // lsp_expr_t *function = lsp_car(callable);

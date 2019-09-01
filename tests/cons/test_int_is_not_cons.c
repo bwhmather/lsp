@@ -11,7 +11,7 @@ int main(void) {
 
     lsp_push_int(5);
 
-    lspt_assert(!lsp_is_cons());
+    lspt_assert(!lsp_is_cons(0));
 
     return 0;
 }

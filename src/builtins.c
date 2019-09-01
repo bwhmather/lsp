@@ -52,7 +52,7 @@ void lsp_map(void) {
     lsp_dup(-1);
     lsp_set_car();
 
-    while (lsp_dup(1), !lsp_is_null()) {
+    while (lsp_dup(1), !lsp_is_null(0)) {
         // Extract the next value in the input list.
         lsp_dup(1);
         lsp_car();
@@ -99,7 +99,7 @@ void lsp_fold(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(3);
 
-    while (lsp_dup(2), !lsp_is_null()) {
+    while (lsp_dup(2), !lsp_is_null(0)) {
         // Read the next item in the list.
         lsp_dup(2);
         lsp_car();
@@ -137,7 +137,7 @@ void lsp_reverse(void) {
     lsp_push_null();
     lsp_swp(1);
 
-    while (!lsp_is_null()) {
+    while (!lsp_is_null(0)) {
         // Replace the output list with a new one starting with the next item
         // in the input list.
         lsp_dup(1);  // Output list
@@ -159,12 +159,12 @@ void lsp_print(void) {
     lsp_fp_t rp = lsp_get_fp();
     lsp_shrink_frame(1);
 
-    if (lsp_is_null()) {
+    if (lsp_is_null(0)) {
         printf("()");
 
         lsp_pop();
 
-    } else if (lsp_is_cons()) {
+    } else if (lsp_is_cons(0)) {
         printf("(");
 
         // Print the first element.
@@ -174,7 +174,7 @@ void lsp_print(void) {
 
         lsp_cdr();
 
-        while (lsp_is_cons()) {
+        while (lsp_is_cons(0)) {
             printf(" ");
 
             // Print the next element in the array.
@@ -188,7 +188,7 @@ void lsp_print(void) {
 
         // If the list is terminated with something other than null, print it
         // after printing a dot.
-        if (!lsp_is_null()) {
+        if (!lsp_is_null(0)) {
             printf(" . ");
             lsp_print();
         } else {
@@ -197,25 +197,25 @@ void lsp_print(void) {
 
         printf(")");
 
-    } else if (lsp_is_int()) {
+    } else if (lsp_is_int(0)) {
         int value = lsp_read_int(0);
         printf("%i", value);
 
         lsp_pop();
 
-    } else if (lsp_is_symbol()) {
+    } else if (lsp_is_symbol(0)) {
         char const *str = lsp_borrow_symbol(0);
         printf("%s", str);
 
         lsp_pop();
 
-    } else if (lsp_is_string()) {
+    } else if (lsp_is_string(0)) {
         char const *str = lsp_borrow_string(0);
         printf("\"%s\"", str);  // TODO escape
 
         lsp_pop();
 
-    } else if (lsp_is_op()) {
+    } else if (lsp_is_op(0)) {
         printf("<builtin>");
 
         lsp_pop();

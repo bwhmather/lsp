@@ -15,7 +15,7 @@ int main(void) {
     lsp_cons();
 
     lspt_assert(lsp_stats_frame_size() == 1);
-    lspt_assert(lsp_is_cons());
+    lspt_assert(lsp_is_cons(0));
 
     return 0;
 }

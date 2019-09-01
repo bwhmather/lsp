@@ -25,21 +25,21 @@ static void lsp_unpack(int n) {
  * passed as its first.
  */
 static void lsp_eval_inner(void) {
-    if (lsp_dup(-1), lsp_is_symbol()) {
+    if (lsp_dup(-1), lsp_is_symbol(0)) {
         // Expression is a name identifying a variable that can be loaded
         // from the environment.  `lookup` will pop the environment and symbol
         // from the stack and replace them with the correct value.
         lsp_lookup();
         return;
 
-    } else if (lsp_dup(-1), lsp_is_cons()) {
+    } else if (lsp_dup(-1), lsp_is_cons(0)) {
         // Expression is a list representing either a special form or an
         // invocation of a procedure or built-in operator.
 
         // Unpack the first element from the list to check if it is a symbol.
         lsp_dup(-1);
         lsp_car();
-        if (lsp_is_symbol()) {
+        if (lsp_is_symbol(0)) {
             // The first item in the list is a symbol.  We first check if it
             // represents a special form and if that doesn't work fall through
             // to evaluating as an expression.
@@ -58,7 +58,7 @@ static void lsp_eval_inner(void) {
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
-                assert(lsp_is_null());
+                assert(lsp_is_null(0));
 
                 // Evaluate and check the predicate.
                 lsp_dup(0);  // The environment.
@@ -90,7 +90,7 @@ static void lsp_eval_inner(void) {
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
-                assert(lsp_is_null());
+                assert(lsp_is_null(0));
 
                 // Return the quoted expression.
                 lsp_store(0);
@@ -108,7 +108,7 @@ static void lsp_eval_inner(void) {
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
-                assert(lsp_is_null());
+                assert(lsp_is_null(0));
 
                 // Evaluate the value.
                 lsp_dup(0);  // The environment.
@@ -134,7 +134,7 @@ static void lsp_eval_inner(void) {
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
-                assert(lsp_is_null());
+                assert(lsp_is_null(0));
 
                 // Evaluate the value.
                 lsp_dup(0);  // The environment.
@@ -161,7 +161,7 @@ static void lsp_eval_inner(void) {
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
-                assert(lsp_is_null());
+                assert(lsp_is_null(0));
 
                 // Wrap the arg spec and function body up to form a function.
                 lsp_cons();
@@ -188,7 +188,7 @@ static void lsp_eval_inner(void) {
                 while (true) {
                     // Check that we haven't reached the end.
                     lsp_dup(2);
-                    if (lsp_is_null()) {
+                    if (lsp_is_null(0)) {
                         break;
                     }
 
@@ -216,7 +216,7 @@ static void lsp_eval_inner(void) {
         int length = 0;
 
         // Evaluate the whole list of expressions and unpack it to the stack.
-        while (lsp_dup(-1), !lsp_is_null()) {
+        while (lsp_dup(-1), !lsp_is_null(0)) {
             length += 1;
 
             // Copy the environment to the top of the stack.

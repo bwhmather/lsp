@@ -16,11 +16,11 @@ int main(void) {
 
     lsp_dup(0);
     lsp_cdr();
-    lspt_expect(lsp_is_null());
+    lspt_expect(lsp_is_null(0));
     lsp_pop();
 
     lsp_car();
-    lspt_assert(lsp_is_null());
+    lspt_assert(lsp_is_null(0));
 
     return 0;
 }

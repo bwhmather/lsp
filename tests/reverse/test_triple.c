@@ -19,7 +19,7 @@ int main(void) {
     lsp_reverse();
 
     lsp_dup(0);
-    lspt_assert(lsp_is_cons());
+    lspt_assert(lsp_is_cons(0));
 
     lsp_dup(0);
     lsp_car();
@@ -35,7 +35,7 @@ int main(void) {
     lsp_dup(0);
     lsp_cdr();
     lsp_cdr();
-    lspt_assert(lsp_is_null());
+    lspt_assert(lsp_is_null(0));
 
     return 0;
 }

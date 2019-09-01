@@ -58,12 +58,10 @@ static inline void lspt_test_on_sigabrt(int signal) {
 static inline void lspt_assert_equal(void) {
     // We loop to compare lists without overflowing the c stack.
     while (true) {
-        if (lsp_is_null()) {
-            lsp_dup(1);
-            lspt_assert(lsp_is_null());
-            lsp_pop();
+        if (lsp_is_null(0)) {
+            lspt_assert(lsp_is_null(0));
 
-        } else if (lsp_is_cons()) {
+        } else if (lsp_is_cons(0)) {
             // Check car.
             lsp_dup(1);
             lsp_car();
@@ -85,25 +83,25 @@ static inline void lspt_assert_equal(void) {
             // Loop to compare the cdrs.
             continue;
 
-        } else if (lsp_is_int()) {
+        } else if (lsp_is_int(0)) {
             int value_a = lsp_read_int(0);
             int value_b = lsp_read_int(1);
 
             lspt_assert(value_a == value_b);
 
-        } else if (lsp_is_symbol()) {
+        } else if (lsp_is_symbol(0)) {
             char const *value_a = lsp_borrow_symbol(0);
             char const *value_b = lsp_borrow_symbol(1);
 
             lspt_assert(strcmp(value_a, value_b) == 0);
 
-        } else if (lsp_is_string()) {
+        } else if (lsp_is_string(0)) {
             char const *value_a = lsp_borrow_string(0);
             char const *value_b = lsp_borrow_string(1);
 
             lspt_assert(strcmp(value_a, value_b) == 0);
 
-        } else if (lsp_is_op()) {
+        } else if (lsp_is_op(0)) {
             lsp_op_t value_a = lsp_read_op(0);
             lsp_op_t value_b = lsp_read_op(1);
 

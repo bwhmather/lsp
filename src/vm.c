@@ -528,33 +528,33 @@ void lsp_swp(int offset) {
     lsp_put_at_offset(tgt, 0);
 }
 
-bool lsp_is_null(void) {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+bool lsp_is_null(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     return lsp_heap_get_type(ref) == LSP_TYPE_NULL;
 }
 
-bool lsp_is_cons(void) {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+bool lsp_is_cons(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     return lsp_heap_get_type(ref) == LSP_TYPE_CONS;
 }
 
-bool lsp_is_int(void) {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+bool lsp_is_int(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     return lsp_heap_get_type(ref) == LSP_TYPE_INT;
 }
 
-bool lsp_is_symbol(void) {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+bool lsp_is_symbol(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     return lsp_heap_get_type(ref) == LSP_TYPE_SYM;
 }
 
-bool lsp_is_string(void) {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+bool lsp_is_string(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     return lsp_heap_get_type(ref) == LSP_TYPE_STR;
 }
 
-bool lsp_is_op(void) {
-    lsp_ref_t ref = lsp_get_at_offset(0);
+bool lsp_is_op(int offset) {
+    lsp_ref_t ref = lsp_get_at_offset(offset);
     return lsp_heap_get_type(ref) == LSP_TYPE_OP;
 }
 

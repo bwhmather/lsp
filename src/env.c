@@ -68,7 +68,7 @@ void lsp_lookup(void) {
     lsp_shrink_frame(2);
 
     // Check that the current environment is not NULL.
-    if (lsp_is_null()) {
+    if (lsp_is_null(0)) {
         assert(false);
         // lsp_abort("undefined variable");
     }
@@ -78,7 +78,7 @@ void lsp_lookup(void) {
     lsp_car();
 
     // Search the list for the symbol.
-    while (lsp_is_cons()) {
+    while (lsp_is_cons(0)) {
         assert(lsp_stats_frame_size() == 3);
 
         // Read the symbol from the first entry.
@@ -134,7 +134,7 @@ void lsp_set(void) {
     lsp_shrink_frame(3);
 
     // Check that the current environment is not NULL.
-    if (lsp_is_null()) {
+    if (lsp_is_null(0)) {
         assert(false);
         // lsp_abort("undefined variable");
     }
@@ -144,7 +144,7 @@ void lsp_set(void) {
     lsp_car();
 
     // Search the list for the symbol.
-    while (lsp_is_cons()) {
+    while (lsp_is_cons(0)) {
         assert(lsp_stats_frame_size() == 4);
 
         // Read the symbol from the first entry.
