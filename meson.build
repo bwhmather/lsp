@@ -73,6 +73,9 @@ test_suites = {
   'eval': [
     'int',
     'symbol',
+    'if_true',
+    'if_false',
+    'add',
   ],
 }
 
