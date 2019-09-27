@@ -202,9 +202,9 @@ void lsp_capture(void) {
 
 
 static void lsp_bind(char *symbol, lsp_op_t operation) {
-    lsp_dup(-1);
-    lsp_push_symbol(symbol);
     lsp_push_op(operation);
+    lsp_push_symbol(symbol);
+    lsp_dup(2);
     lsp_define();
 }
 
