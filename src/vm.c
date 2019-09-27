@@ -559,7 +559,7 @@ bool lsp_is_op(int offset) {
 }
 
 bool lsp_is_truthy(void) {
-    lsp_ref_t ref = lsp_get_at_offset(-1);
+    lsp_ref_t ref = lsp_get_at_offset(0);
     switch (lsp_heap_get_type(ref)) {
         case LSP_TYPE_NULL:
             return false;
