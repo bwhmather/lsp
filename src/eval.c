@@ -40,14 +40,13 @@ static void lsp_eval_inner(void) {
             // The first item in the list is a symbol.  We first check if it
             // represents a special form and if that doesn't work fall through
             // to evaluating as an expression.
-
-            lsp_dup(-1);
-            lsp_car();
             char const *sym = lsp_borrow_symbol(0);
+
             if (strcmp(sym, "if") == 0) {
-                // Strip the `if` from the top of the stack and the beginning
-                // of the current expression.
                 lsp_pop();
+
+                // Duplicate the expression, and strip the leading `if`.
+                lsp_dup(1);
                 lsp_cdr();
 
                 // Unpack the predicate, subsequent and alternate expressions.
@@ -56,24 +55,27 @@ static void lsp_eval_inner(void) {
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
                 assert(lsp_is_null(0));
+                lsp_pop();
 
                 // Evaluate and check the predicate.
-                lsp_dup(0);  // The environment.
-                lsp_dup(2);  // The predicate expression.
+                lsp_dup(-3);  // The predicate expression.
+                lsp_dup(-2);  // The environment.
                 lsp_eval();
 
                 if (lsp_is_truthy()) {
-                    lsp_dup(0);  // The environment.
-                    lsp_dup(3);  // The subsequent.
+                    lsp_pop();  // The result.
+                    lsp_pop();  // The alternate.
+                    lsp_store(-1);  // The subsequent.
+                    lsp_pop();  // The predicate.
                     lsp_eval();
                 } else {
-                    lsp_dup(0);  // The environment.
-                    lsp_dup(4);  // The alternate.
+                    lsp_pop();  // The result.
+                    lsp_store(-1);  // The alternate.
+                    lsp_pop();  // The subsequent.
+                    lsp_pop();  // The predicate.
                     lsp_eval();
                 }
 
-                lsp_store(0);
-                lsp_pop_to(1);
                 return;
             }
             if (strcmp(sym, "quote") == 0) {
