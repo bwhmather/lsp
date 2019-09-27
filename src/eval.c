@@ -8,13 +8,10 @@
  * tail onto the stack.
  */
 static void lsp_unpack(int n) {
-    for (int i=0; i < n; i++) {
-        // Read the current head of the list.
-        lsp_dup(-1);
+    for (int i = 0; i < n; i++) {
+        lsp_dup(0);
         lsp_car();
-        // Save it.
-        lsp_swp(-2);
-        // Advance the head.
+        lsp_swp(1);
         lsp_cdr();
     }
 }
