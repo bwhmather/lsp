@@ -212,33 +212,50 @@ static void lsp_eval_inner(void) {
             lsp_pop();
         }
 
-        int length = 0;
 
-        // Evaluate the whole list of expressions and unpack it to the stack.
-        while (lsp_dup(-1), !lsp_is_null(0)) {
+        // Evaluate each expression in the list, starting from the callable.
+        int length = 0;
+        while (!lsp_is_null(-1)) {
             length += 1;
 
-            // Copy the environment to the top of the stack.
-            lsp_dup(0);
-
-            // Unpack the next expression in the list on top of it.
-            lsp_dup(-2);
+            // Read the next item in the list.
+            lsp_dup(-1);
             lsp_car();
 
-            // Evaluate it.
-            lsp_eval();
-
-            // Save the result.
-            lsp_swp(-2);
-
-            // Move to the next item in the list.
+            // Remove it from the list.
+            lsp_dup(-1);
             lsp_cdr();
+            lsp_store(-1);
+
+            // Evaluate it in the current environment.
+            lsp_dup(-2);
+            lsp_eval();
         }
 
-        // Move the function from the bottom of the stack to the top and call
-        // it.
-        lsp_dup(2);
-        lsp_call(length - 1);
+        // Reverse the results on the stack, including the env and the empty
+        // expression list.
+        for (int i = 0; i < (length + 2) / 2; i++) {
+            lsp_dup(-1 - i);
+            lsp_swp(i + 1);
+            lsp_store(-1 - i);
+        }
+
+        // Pop the empty expression list and the env.
+        lsp_pop();
+        lsp_pop();
+
+        // Expand the callable until the top of the stack contains an op.
+        while (!lsp_is_op(0)) {
+            lsp_dup(0);
+            lsp_cdr();
+            lsp_swp(1);
+            lsp_car();
+        }
+
+        // Call the op.
+        lsp_op_t op = lsp_read_op(0);
+        lsp_pop();
+        op();
     } else {
         // Expression is a literal that does not need to be evaluated.  Discard
         // the environment and return the literal as is.
