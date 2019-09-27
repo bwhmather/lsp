@@ -212,7 +212,6 @@ static void lsp_eval_inner(void) {
             lsp_pop();
         }
 
-
         // Evaluate each expression in the list, starting from the callable.
         int length = 0;
         while (!lsp_is_null(-1)) {
