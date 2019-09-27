@@ -25,14 +25,14 @@ static void lsp_unpack(int n) {
  * passed as its first.
  */
 static void lsp_eval_inner(void) {
-    if (lsp_dup(-1), lsp_is_symbol(0)) {
+    if (lsp_is_symbol(1)) {
         // Expression is a name identifying a variable that can be loaded
         // from the environment.  `lookup` will pop the environment and symbol
         // from the stack and replace them with the correct value.
         lsp_lookup();
         return;
 
-    } else if (lsp_dup(-1), lsp_is_cons(0)) {
+    } else if (lsp_is_cons(1)) {
         // Expression is a list representing either a special form or an
         // invocation of a procedure or built-in operator.
 
@@ -242,8 +242,7 @@ static void lsp_eval_inner(void) {
         lsp_call(length - 1);
     } else {
         // Expression is a literal that does not need to be evaluated.  Discard
-        // the environment and return it as is.
-        lsp_swp(-1);
+        // the environment and return the literal as is.
         lsp_pop();
     }
 }

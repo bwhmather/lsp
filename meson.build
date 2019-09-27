@@ -69,7 +69,11 @@ test_suites = {
     'lookup_outer',
     'lookup_shadowed',
     'set',
-  ]
+  ],
+  'eval': [
+    'int',
+    'symbol',
+  ],
 }
 
 foreach suite, tests : test_suites
