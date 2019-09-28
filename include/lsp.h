@@ -11,19 +11,12 @@ typedef int lsp_fp_t;
  * Stack operations
  * ================
  * Functions for manipulating the reference stack.
- *
- * Operations on the stack usually involve offset.
- * Offsets less than zero are relative to the stack pointer.  The offset of the
- * value at the top of the heap is -1.
- *
- * Offsets greater than or equal to zero are relative to the frame pointer.
- * The offset of the first reference in the current frame is 0.
  */
 
 /**
  * Copies the reference at `offset` to the top of the reference stack.
  *
- * `lsp_dup(-1)` will duplicate the value at the top of the stack.
+ * `lsp_dup(0)` will duplicate the value at the top of the stack.
  *
  * Will abort if `offset` is not in bounds.
  */
