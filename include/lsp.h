@@ -154,11 +154,9 @@ bool lsp_symbol_matches_literal(char const *value);
 void lsp_push_string(char const *value);
 
 /**
- * Pops a reference from the top of the stack, returning true if it points to a
- * string and false otherwise.
+ * Returns true if the reference at the given stack offset points to a string.
  *
- * Arguments:
- *   - value: The value to check for stringiness.
+ * Does not modify the heap or the stack.
  */
 bool lsp_is_string(int offset);
 
@@ -169,27 +167,11 @@ bool lsp_is_string(int offset);
  * The reference pointing to the string will **not** be popped from the stack.
  *
  * Warning:
- *     Calling any lsp function other than `lsp_borrow_string` is could result
- *     in a garbage collection that would invalidate the reference..
+ *     Calling any mutating lsp function could trigger a garbage collection
+ *     that would invalidate the reference.
  */
 char const *lsp_borrow_string(int offset);
 
-/**
- * Pops a string and replaces it with an integer who's value is the same as the
- * string's length.
- *
- * Arguments:
- *   - string: The string we would like to find the length for.
- *
- * Returns:
- *   - length: The length of the string not including the terminating null.
- */
-void lsp_str_len(void);
-
-/* Pops a pair of strings from the stack and returns a new one containing the
- * bytes of the first string followed by the bytes of the second.
- */
-void lsp_str_concat(void);
 
 /**
  * Cons cells
@@ -206,11 +188,7 @@ void lsp_str_concat(void);
 void lsp_push_cons(void);
 
 /**
- * Pops a value from the stack, returning true if it is a cons cell and false
- * otherwise.
- *
- * Arguments:
- *   - The value we want to check is a cons cell.
+ * Returns true if the ref at offset points to a cons cell, false otherwise.
  */
 bool lsp_is_cons(int offset);
 
