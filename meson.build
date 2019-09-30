@@ -76,6 +76,8 @@ test_suites = {
     'if_true',
     'if_false',
     'add',
+    'quote_int',
+    'quote_lambda',
   ],
 }
 

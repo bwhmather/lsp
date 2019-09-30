@@ -79,21 +79,22 @@ static void lsp_eval_inner(void) {
                 return;
             }
             if (strcmp(sym, "quote") == 0) {
-                // Strip the `quote` from the top of the stack and the
-                // beginning of the current expression.
+                // Pop the `quote` and the environment from the top of the
+                // stack.
                 lsp_pop();
-                lsp_cdr();
+                lsp_pop();
 
-                // Unpack the expression.
+                // Strip the `quote` from the expression, and split the rest of
+                // the list into a head and tail.
+                lsp_cdr();
                 lsp_unpack(1);
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
                 assert(lsp_is_null(0));
+                lsp_pop();
 
                 // Return the quoted expression.
-                lsp_store(0);
-                lsp_pop_to(1);
                 return;
             }
             if (strcmp(sym, "define") == 0) {
