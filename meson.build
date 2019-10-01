@@ -78,6 +78,7 @@ test_suites = {
     'add',
     'quote_int',
     'quote_lambda',
+    'define_in_empty',
   ],
 }
 
