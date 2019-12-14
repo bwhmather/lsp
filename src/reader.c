@@ -6,42 +6,68 @@
 
 
 static char lsp_parser_next(void) {
-    const char *buffer = lsp_borrow_string(-1);
-    int cursor = lsp_read_int(-2);
+    lsp_dup(0);
+    lsp_cdr();
+    int cursor = lsp_read_int(0);
+    lsp_pop();
 
-    return buffer[cursor];
+    lsp_dup(0);
+    lsp_car();
+    const char *buffer = lsp_borrow_string(0);
+    char character = buffer[cursor];
+    lsp_pop();
+
+    return character;
 }
 
 
 static char lsp_parser_lookahead(void) {
-    const char *buffer = lsp_borrow_string(-1);
-    int cursor = lsp_read_int(-2);
+    lsp_dup(0);
+    lsp_cdr();
+    int cursor = lsp_read_int(0);
+    lsp_pop();
 
-    if (buffer[cursor] == '\0') {
-        return '\0';
-    }
+    lsp_dup(0);
+    lsp_car();
+    const char *buffer = lsp_borrow_string(0);
+    char character = buffer[cursor] == '\0' ? '\0': buffer[cursor + 1];
+    lsp_pop();
 
-    return buffer[cursor + 1];
+    return character;
 }
 
 
 static void lsp_parser_advance(void) {
-    const char *buffer = lsp_borrow_string(-1);
-    int cursor = lsp_read_int(-2);
+    lsp_dup(0);
+    lsp_cdr();
+    int cursor = lsp_read_int(0);
+    lsp_pop();
 
-    if (buffer[cursor] != '\0') {
+    lsp_dup(0);
+    lsp_car();
+    const char *buffer = lsp_borrow_string(0);
+    char character = buffer[cursor];
+    lsp_pop();
+
+    if (character != '\0') {
         lsp_push_int(cursor + 1);
-        lsp_store(-2);
+        lsp_swp(1);
+        lsp_set_cdr();
     }
 }
 
 
 static void lsp_consume_whitespace(void) {
     char next = lsp_parser_next();
+
     while (next == ' ' || next == '\n' || next == '\t') {
+        lsp_dup(0);
         lsp_parser_advance();
+
         next = lsp_parser_next();
     }
+
+    lsp_pop();
 }
 
 
@@ -83,9 +109,14 @@ static void lsp_parse_symbol(void) {
         buffer[cursor] = next;
         cursor++;
 
+        lsp_dup(-1);
         lsp_parser_advance();
+
+        lsp_dup(-1);
         next = lsp_parser_next();
+        lsp_pop();
     }
+    lsp_pop();
 
     buffer[cursor] = '\0';
 
@@ -103,6 +134,7 @@ static void lsp_parse_string(void) {
     }
     size_t cursor = 0;
 
+    lsp_dup(0);
     lsp_parser_advance();
 
     while (true) {
@@ -124,12 +156,15 @@ static void lsp_parse_string(void) {
         if (next == '"') {
             buffer[cursor] = '\0';
 
+            lsp_dup(0);
             lsp_parser_advance();
             break;
         }
 
         if (next == '\\') {
+            lsp_dup(0);
             lsp_parser_advance();
+
             next = lsp_parser_next();
 
             switch (next) {
@@ -167,9 +202,10 @@ static void lsp_parse_string(void) {
         buffer[cursor] = next;
         cursor++;
 
+        lsp_dup(0);
         lsp_parser_advance();
     }
-
+    lsp_pop();
 
     lsp_push_string(buffer);
 
@@ -184,7 +220,10 @@ static void lsp_parse_number(void) {
     char next = lsp_parser_next();
     if (next == '-') {
         negative = true;
+
+        lsp_dup(0);
         lsp_parser_advance();
+
         next = lsp_parser_next();
     }
 
@@ -192,9 +231,12 @@ static void lsp_parse_number(void) {
         accumulator *= 10;
         accumulator += (int) (next - '0');
 
+        lsp_dup(0);
         lsp_parser_advance();
+
         next = lsp_parser_next();
     }
+    lsp_pop();
 
     lsp_push_int(negative ? -accumulator : accumulator);
 }
@@ -210,6 +252,8 @@ void lsp_parse(void) {
     lsp_shrink_frame(1);
 
     lsp_push_int(0);
+    lsp_swp(1);
+    lsp_cons();
 
     // The next item on the stack, after the cursor, is a list, ordered inner
     // to outer, of pointers to the last cons cell in each list body.  This is
@@ -227,12 +271,13 @@ void lsp_parse(void) {
     // reversed and added to the containing list in the parse stack.
 
     while (true) {
-        assert(lsp_stats_frame_size() == 4);
-
+        lsp_dup(2);
         lsp_consume_whitespace();
 
+        lsp_dup(2);
         char next = lsp_parser_next();
         char lookahead = lsp_parser_lookahead();
+        lsp_pop();
 
         if (next == '(') {
             // Push the current body onto the stack, consuming it.
@@ -241,6 +286,7 @@ void lsp_parse(void) {
             // Replace it with a new empty list.
             lsp_push_null();
 
+            lsp_dup(-1);
             lsp_parser_advance();
 
             // No expression to add.  Skip logic at end of loop.
@@ -274,6 +320,7 @@ void lsp_parse(void) {
             lsp_cdr();
             lsp_store(3);
 
+            lsp_dup(-1);
             lsp_parser_advance();
         } else if (next == '.') {
             // TODO figure out how to parse non-list cons cells.
@@ -282,10 +329,13 @@ void lsp_parse(void) {
             (next >= '0' && next <= '9') ||
             (next == '-' && lookahead >= '0' && lookahead <= '9')
         ) {
+            lsp_dup(2);
             lsp_parse_number();
         } else if (next == '"') {
+            lsp_dup(2);
             lsp_parse_string();
         } else if (lsp_is_symbol_character(next)) {
+            lsp_dup(2);
             lsp_parse_symbol();
         } else {
             assert(false);
