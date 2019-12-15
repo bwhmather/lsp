@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+static void lsp_parse_one(void);
+
 
 static char lsp_parser_next(void) {
     lsp_dup(0);
@@ -242,6 +244,31 @@ static void lsp_parse_number(void) {
 }
 
 
+static void lsp_parse_list(void) {
+    // TODO
+    assert(0);
+}
+
+static void lsp_parse_one(void) {
+    char next = lsp_parser_next();
+    char lookahead = lsp_parser_lookahead();
+
+    if (next == '(') {
+        lsp_parse_list();
+    } else if (
+        (next >= '0' && next <= '9') ||
+        (next == '-' && lookahead >= '0' && lookahead <= '9')
+    ) {
+        lsp_parse_number();
+    } else if (next == '"') {
+        lsp_parse_string();
+    } else if (lsp_is_symbol_character(next)) {
+        lsp_parse_symbol();
+    } else {
+        assert(false);
+    }
+}
+
 /**
  * Should be called with a single string.
  *
@@ -276,7 +303,6 @@ void lsp_parse(void) {
 
         lsp_dup(2);
         char next = lsp_parser_next();
-        char lookahead = lsp_parser_lookahead();
         lsp_pop();
 
         if (next == '(') {
@@ -322,23 +348,9 @@ void lsp_parse(void) {
 
             lsp_dup(-1);
             lsp_parser_advance();
-        } else if (next == '.') {
-            // TODO figure out how to parse non-list cons cells.
-            assert(false);
-        } else if (
-            (next >= '0' && next <= '9') ||
-            (next == '-' && lookahead >= '0' && lookahead <= '9')
-        ) {
-            lsp_dup(2);
-            lsp_parse_number();
-        } else if (next == '"') {
-            lsp_dup(2);
-            lsp_parse_string();
-        } else if (lsp_is_symbol_character(next)) {
-            lsp_dup(2);
-            lsp_parse_symbol();
         } else {
-            assert(false);
+            lsp_dup(-1);
+            lsp_parse_one();
         }
 
         // Replace the body with a new list containing the new expression as
