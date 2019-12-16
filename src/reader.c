@@ -245,8 +245,61 @@ static void lsp_parse_number(void) {
 
 
 static void lsp_parse_list(void) {
-    // TODO
-    assert(0);
+    // Cons cell where the cdr points to the head of the list, and the car is
+    // ignored.
+    lsp_push_cons();
+
+    // Reference to the tail of the list.
+    lsp_dup(0);
+
+    // Consume the leading '('.
+    lsp_dup(-1);
+    char next = lsp_parser_next();
+    assert(next == '(');
+    lsp_parser_advance();
+
+    while (true) {
+        lsp_dup(-1);
+        lsp_consume_whitespace();
+
+        lsp_dup(-1);
+        char next = lsp_parser_next();
+        lsp_pop();
+
+        if (next == ')') {
+            lsp_dup(-1);
+            lsp_parser_advance();
+            break;
+        }
+
+        if (next == '.') {
+            // TODO
+            assert(false);
+        }
+
+        lsp_dup(-1);
+        lsp_parse_one();
+
+        // Create a new tail pair.
+        lsp_push_null();
+        lsp_swp(1);
+
+        lsp_cons();
+
+        // Insert it as the cdr of the current tail.
+        lsp_dup(1);
+        lsp_set_cdr();
+
+        // Replace the old tail with the new tail.
+        lsp_cdr();
+    }
+
+    // Discard the tail reference.
+    lsp_pop();
+
+    // Strip the dummy head and save the rest of the list.
+    lsp_cdr();
+    lsp_store(1);
 }
 
 static void lsp_parse_one(void) {
@@ -305,20 +358,6 @@ void lsp_parse(void) {
         char next = lsp_parser_next();
         lsp_pop();
 
-        if (next == '(') {
-            // Push the current body onto the stack, consuming it.
-            lsp_cons();
-
-            // Replace it with a new empty list.
-            lsp_push_null();
-
-            lsp_dup(-1);
-            lsp_parser_advance();
-
-            // No expression to add.  Skip logic at end of loop.
-            continue;
-        }
-
         if (next == '\0') {
             // Put the body list back in the right order and return it.
             lsp_reverse();
@@ -328,30 +367,8 @@ void lsp_parse(void) {
             return;
         }
 
-        // Parse the next expression and save it as the third item in this
-        // stack frame.
-        if (next == ')') {
-            // Unwind and reverse the current body list and store it as the
-            // current expression.
-            lsp_dup(0);
-            lsp_reverse();
-
-            // Replace the body list with the next one down the parse stack.
-            lsp_dup(2);
-            lsp_car();
-            lsp_store(2);
-
-            // Pop restored body list from the parse stack.
-            lsp_dup(2);
-            lsp_cdr();
-            lsp_store(3);
-
-            lsp_dup(-1);
-            lsp_parser_advance();
-        } else {
-            lsp_dup(-1);
-            lsp_parse_one();
-        }
+        lsp_dup(-1);
+        lsp_parse_one();
 
         // Replace the body with a new list containing the new expression as
         // its first element.
