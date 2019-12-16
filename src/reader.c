@@ -269,12 +269,32 @@ static void lsp_parse_list(void) {
         if (next == ')') {
             lsp_dup(-1);
             lsp_parser_advance();
+
             break;
         }
 
         if (next == '.') {
-            // TODO
-            assert(false);
+            lsp_dup(-1);
+            lsp_parser_advance();
+
+            lsp_dup(-1);
+            lsp_consume_whitespace();
+
+            lsp_dup(-1);
+            lsp_parse_one();
+
+            // Insert the value following the dot as the cdr of the tail.
+            lsp_dup(1);
+            lsp_set_cdr();
+
+            lsp_dup(-1);
+            lsp_consume_whitespace();
+
+            lsp_dup(-1);
+            assert(lsp_parser_next() == ')');
+            lsp_parser_advance();
+
+            break;
         }
 
         lsp_dup(-1);
