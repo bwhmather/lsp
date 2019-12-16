@@ -59,6 +59,10 @@ test_suites = {
     'list_of_nils',
     'string',
     'string_escapes',
+    'dotted_pair',
+    'dotted_list',
+    'dotted_prefix',
+    'dotted_suffix',
   ],
   'env': [
     'push_empty',
