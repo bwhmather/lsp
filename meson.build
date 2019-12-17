@@ -7,7 +7,6 @@ lib_sources = [
   'src/builtins.c',
   'src/env.c',
   'src/eval.c',
-  'src/interpreter.c',
   'src/reader.c',
   'src/vm.c',
 ]
