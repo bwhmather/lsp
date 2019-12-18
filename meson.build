@@ -83,6 +83,7 @@ test_suites = {
     'quote_lambda',
     'define_in_empty',
     'lambda',
+    'add_lambda',
   ],
 }
 
