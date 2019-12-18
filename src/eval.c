@@ -3,6 +3,107 @@
 #include <string.h>
 #include <assert.h>
 
+
+void lsp_op_eval_lambda(void) {
+    // Push new scope onto closure.
+    // Bind arguments to local variables.
+    // Call `lsp_eval`.
+    //
+    // Arguments:
+    //   - 0: (args body)
+    //   - 1: env
+    //   - ...: arguments
+    //
+    // After unpacking
+    //   - args
+    //   - body
+    //   - env
+    //   - ...
+    //
+    // While reading args
+    //   - env
+    //   - symbol
+    //   - value
+    //   - args
+    //   - body
+    //   - env
+    //   - ...
+    int nargs = lsp_stats_frame_size() - 2;
+
+    // Unpack body and argument list.
+    lsp_dup(0);
+    lsp_cdr();
+    lsp_swp(1);
+    lsp_car();
+
+    // Push an empty scope onto the closure and then save it back in its
+    // original place on the stack.
+    lsp_dup(2);
+    lsp_push_scope();
+    lsp_store(3);
+
+    // Bind arguments to local variables.
+    for (int i = 0; i < nargs; i++) {
+        // Push next argument to the top of the stack.
+        lsp_dup(i + 3);
+
+        // Read next argument name.
+        lsp_dup(1);
+        lsp_cdr();  // Could fail if too many arguments.
+        lsp_swp(2);
+        lsp_car();
+
+        // Bind value to argument name.
+        lsp_dup(4);
+        lsp_define();
+    }
+
+    // Save the body and environment to the bottom of the stack then pop
+    // everything else.  We do a bit of a dance in case there was only one
+    // argument.
+    lsp_pop();
+    lsp_dup(1);
+    lsp_dup(1);
+    lsp_store(-1);
+    lsp_store(-2);
+
+    // Remaining arguments.
+    while (lsp_stats_frame_size() > 2) {
+        lsp_pop();
+    }
+
+    // At this state the only things on the stack should be the new environment
+    // with bound arguments, and the function body.
+    lsp_eval();
+}
+
+
+void lsp_call_inner(void) {
+    // Expand the callable until the top of the stack contains an op.
+    while (!lsp_is_op(0)) {
+        lsp_dup(0);
+        lsp_cdr();
+        lsp_swp(1);
+        lsp_car();
+    }
+
+    // Call the op.
+    lsp_op_t op = lsp_read_op(0);
+    lsp_pop();
+    op();
+}
+
+
+void lsp_call(int nargs) {
+    lsp_fp_t rp = lsp_get_fp();
+    lsp_shrink_frame(nargs + 1);
+
+    lsp_call_inner();
+
+    lsp_restore_fp(rp);
+}
+
+
 /**
  * Helper function that expands the first n elements of a list followed by the
  * tail onto the stack.
@@ -182,7 +283,6 @@ static void lsp_eval_inner(void) {
 
                 // Bind the environment to create the runtime closure.
                 lsp_cons();
-
                 return;
             }
             if (strcmp(sym, "begin") == 0) {
@@ -217,10 +317,9 @@ static void lsp_eval_inner(void) {
                 lsp_pop_to(1);
                 return;
             }
-
-            // Strip the unrecognised symbol from the top of the stack.
-            lsp_pop();
         }
+        // Strip the unrecognised symbol from the top of the stack.
+        lsp_pop();
 
         // Evaluate each expression in the list, starting from the callable.
         int length = 0;
@@ -253,18 +352,7 @@ static void lsp_eval_inner(void) {
         lsp_pop();
         lsp_pop();
 
-        // Expand the callable until the top of the stack contains an op.
-        while (!lsp_is_op(0)) {
-            lsp_dup(0);
-            lsp_cdr();
-            lsp_swp(1);
-            lsp_car();
-        }
-
-        // Call the op.
-        lsp_op_t op = lsp_read_op(0);
-        lsp_pop();
-        op();
+        lsp_call_inner();
     } else {
         // Expression is a literal that does not need to be evaluated.  Discard
         // the environment and return the literal as is.
