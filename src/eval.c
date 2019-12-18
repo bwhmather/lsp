@@ -151,30 +151,38 @@ static void lsp_eval_inner(void) {
                 return;
             }
             if (strcmp(sym, "lambda") == 0) {
-                // Strip the `lambda` from the top of the stack and the
-                // beginning of the current expression.
+                // Strip the `lambda` from the top of the stack.
                 lsp_pop();
-                // Strip the `lambda`.
+
+                // Swap the environment and expression.
+                lsp_swp(1);
+
+                // Drop the `lambda`, and unpack the arguments and body onto
+                // the stack.
                 lsp_cdr();
 
-                // Unpack the argument list and body.
                 lsp_unpack(2);
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
                 assert(lsp_is_null(0));
+                lsp_pop();
 
-                // Wrap the arg spec and function body up to form a function.
+                // TODO Find free variables.
+                // TODO Capture free variables from the environment.
+
+                // Wrap up the argument list and body to create a closure for
+                // `lsp_op_eval_lambda`.
+                lsp_swp(1);
                 lsp_cons();
 
-                // Bind the function object and environment together to create
-                // a closure.
-                lsp_dup(0);
+                // Bind the function description closure.
+                lsp_push_op(lsp_op_eval_lambda);
                 lsp_cons();
 
-                // Return the closure.
-                lsp_store(0);
-                lsp_pop_to(1);
+                // Bind the environment to create the runtime closure.
+                lsp_cons();
+
                 return;
             }
             if (strcmp(sym, "begin") == 0) {
