@@ -160,12 +160,12 @@ void lsp_print(void) {
     lsp_shrink_frame(1);
 
     if (lsp_is_null(0)) {
-        printf("()");
+        fprintf(stderr, "()");
 
         lsp_pop();
 
     } else if (lsp_is_cons(0)) {
-        printf("(");
+        fprintf(stderr, "(");
 
         // Print the first element.
         lsp_dup(0);
@@ -175,7 +175,7 @@ void lsp_print(void) {
         lsp_cdr();
 
         while (lsp_is_cons(0)) {
-            printf(" ");
+            fprintf(stderr, " ");
 
             // Print the next element in the array.
             lsp_dup(0);
@@ -189,34 +189,34 @@ void lsp_print(void) {
         // If the list is terminated with something other than null, print it
         // after printing a dot.
         if (!lsp_is_null(0)) {
-            printf(" . ");
+            fprintf(stderr, " . ");
             lsp_print();
         } else {
             lsp_pop();
         }
 
-        printf(")");
+        fprintf(stderr, ")");
 
     } else if (lsp_is_int(0)) {
         int value = lsp_read_int(0);
-        printf("%i", value);
+        fprintf(stderr, "%i", value);
 
         lsp_pop();
 
     } else if (lsp_is_symbol(0)) {
         char const *str = lsp_borrow_symbol(0);
-        printf("%s", str);
+        fprintf(stderr, "%s", str);
 
         lsp_pop();
 
     } else if (lsp_is_string(0)) {
         char const *str = lsp_borrow_string(0);
-        printf("\"%s\"", str);  // TODO escape
+        fprintf(stderr, "\"%s\"", str);  // TODO escape
 
         lsp_pop();
 
     } else if (lsp_is_op(0)) {
-        printf("<builtin>");
+        fprintf(stderr, "<builtin>");
 
         lsp_pop();
 
@@ -231,12 +231,12 @@ void lsp_print(void) {
 void lsp_print_stack(void) {
     int frame_size = lsp_stats_frame_size();
 
-    printf("\n=== Stack ===\n");
+    fprintf(stderr, "\n=== Stack ===\n");
     for (int i=0; i < frame_size; i++) {
-        printf("%i: ", i);
+        fprintf(stderr, "%i: ", i);
         lsp_dup(i);
         lsp_print();
-        printf("\n");
+        fprintf(stderr, "\n");
     }
-    printf("-------------\n");
+    fprintf(stderr, "-------------\n");
 }
