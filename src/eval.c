@@ -289,32 +289,24 @@ static void lsp_eval_inner(void) {
                 // Strip the `begin` from the top of the stack and the
                 // beginning of the current expression.
                 lsp_pop();
+                lsp_swp(1);
                 lsp_cdr();
 
-                // Set a default result in case there are no expressions.
                 lsp_push_null();
-
-                while (true) {
-                    // Check that we haven't reached the end.
-                    lsp_dup(2);
-                    if (lsp_is_null(0)) {
-                        break;
-                    }
-
-                    // Discard the previous result.
-                    lsp_pop_to(3);
-
-                    // Evaluate the next expression in the list.
-                    lsp_dup(0);  // The environment.
-                    lsp_dup(2);  // The expression.
+                while (!lsp_is_null(1)) {
+                    lsp_pop();
+                    lsp_dup(0);
                     lsp_car();
+                    lsp_dup(2);
                     lsp_eval();
+                    lsp_dup(1);
+                    lsp_cdr();
+                    lsp_store(2);
                 }
 
-                // Return the result of evaluating the last expression in the
-                // list.
-                lsp_store(0);
-                lsp_pop_to(1);
+                lsp_store(2);
+                lsp_pop();
+
                 return;
             }
         }
