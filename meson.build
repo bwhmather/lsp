@@ -86,6 +86,7 @@ test_suites = {
     'set',
     'lambda',
     'add_lambda',
+    'lambda_body',
   ],
 }
 

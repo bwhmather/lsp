@@ -21,7 +21,7 @@ int main(void) {
 
     lspt_assert(lsp_stats_frame_size() == 1);
 
-    lsp_push_string("((<builtin> . ((x) . (* 2 x))) . (() . ()))");
+    lsp_push_string("((<builtin> . ((x) (* 2 x))) . (() . ()))");
     lsp_parse();
     lsp_car();
 

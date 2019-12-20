@@ -64,17 +64,28 @@ void lsp_op_eval_lambda(void) {
     lsp_pop();
     lsp_dup(1);
     lsp_dup(1);
-    lsp_store(-1);
     lsp_store(-2);
+    lsp_store(-1);
 
     // Remaining arguments.
     while (lsp_stats_frame_size() > 2) {
         lsp_pop();
     }
 
-    // At this state the only things on the stack should be the new environment
-    // with bound arguments, and the function body.
-    lsp_eval();
+    lsp_push_null();
+    while (!lsp_is_null(1)) {
+        lsp_pop();
+        lsp_dup(0);
+        lsp_car();
+        lsp_dup(2);
+        lsp_eval();
+        lsp_dup(1);
+        lsp_cdr();
+        lsp_store(2);
+    }
+
+    lsp_store(2);
+    lsp_pop();
 }
 
 
@@ -263,20 +274,8 @@ static void lsp_eval_inner(void) {
                 // the stack.
                 lsp_cdr();
 
-                lsp_unpack(2);
-
-                // Pop the tail of the expression and check that it contains no
-                // further elements.
-                assert(lsp_is_null(0));
-                lsp_pop();
-
                 // TODO Find free variables.
                 // TODO Capture free variables from the environment.
-
-                // Wrap up the argument list and body to create a closure for
-                // `lsp_op_eval_lambda`.
-                lsp_swp(1);
-                lsp_cons();
 
                 // Bind the function description closure.
                 lsp_push_op(lsp_op_eval_lambda);
