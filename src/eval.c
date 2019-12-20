@@ -226,28 +226,29 @@ static void lsp_eval_inner(void) {
                 return;
             }
             if (strcmp(sym, "set!") == 0) {
-                // Strip the `set!` from the top of the stack and the beginning
-                // of the current expression.
+                // Strip the `set!` from the top of the stack
                 lsp_pop();
-                lsp_cdr();
 
-                // Unpack the key and value.
+                // Drop the `set!` from the current expression and unpack the
+                // symbol and the value onto the stack.
+                lsp_dup(1);
+                lsp_cdr();
                 lsp_unpack(2);
 
                 // Pop the tail of the expression and check that it contains no
                 // further elements.
                 assert(lsp_is_null(0));
+                lsp_pop();
 
-                // Evaluate the value.
-                lsp_dup(0);  // The environment.
-                lsp_swp(-1);  // Swap the environment and value expression.
-                lsp_eval();
+                // Rearrange the stack so that the environment is at the top,
+                // followed by the symbol and then the value.
+                lsp_store(3);
+                lsp_swp(1);
 
-                // Bind the evaluated value to the key.
+                // Re-bind the evaluated value to the key.
                 lsp_set();
 
                 // Return NULL.
-                lsp_pop_to(0);
                 lsp_push_null();
                 return;
             }

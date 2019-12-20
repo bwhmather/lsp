@@ -83,6 +83,7 @@ test_suites = {
     'quote_lambda',
     'define_in_empty',
     'define_in_nested',
+    'set',
     'lambda',
     'add_lambda',
   ],
