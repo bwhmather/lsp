@@ -52,7 +52,8 @@ void lsp_define(void) {
     lsp_set_car();
 
     // Environment has been mutated in place, so don't return.
-    lsp_pop_to(-1);
+    lsp_pop();
+    lsp_pop();
 
     lsp_restore_fp(rp);
 }

@@ -84,8 +84,6 @@ void lsp_map(void) {
 
     // Return the output list.
     lsp_cdr();
-
-    lsp_pop_to(1);
     lsp_restore_fp(rp);
 }
 
@@ -125,7 +123,7 @@ void lsp_fold(void) {
     // Return the accumulator as the result.
     lsp_store(0);
 
-    lsp_pop_to(1);
+    lsp_pop();
     lsp_restore_fp(rp);
 }
 

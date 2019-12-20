@@ -501,20 +501,6 @@ void lsp_store(int offset) {
     lsp_pop();
 }
 
-void lsp_pop_to(int offset) {
-    int abs_offset;
-    if (offset < 0) {
-        // Offset is less than zero so is relative to the frame pointer.
-        assert(ref_frame_ptr - ref_stack_ptr <= offset);
-        abs_offset = ref_frame_ptr - offset - 1;
-    } else {
-        // Offset is greater than zero so is relative to the stack pointer.
-        assert(ref_stack_ptr - ref_frame_ptr > offset);
-        abs_offset = ref_stack_ptr - offset - 1;
-    }
-    ref_stack_ptr = abs_offset;
-}
-
 void lsp_pop(void) {
     assert(ref_stack_ptr > ref_frame_ptr);
     ref_stack_ptr--;

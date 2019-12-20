@@ -382,7 +382,7 @@ void lsp_parse(void) {
             // Put the body list back in the right order and return it.
             lsp_reverse();
             lsp_store(-1);
-            lsp_pop_to(-2);
+            lsp_pop();
             lsp_restore_fp(rp);
             return;
         }

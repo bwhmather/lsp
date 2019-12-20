@@ -45,17 +45,6 @@ void lsp_store(int offset);
 void lsp_pop(void);
 
 /**
- * Pops all references up to and including the value at `offset` from the top
- * of the stack.
- *
- * Will abort if `offset` is not in bounds.
- *
- * It is not safe to call `lsp_pop_to` while holding raw pointers to objects
- * stored on the heap.
- */
-void lsp_pop_to(int offset);
-
-/**
  * Swaps the reference at `offset` with the reference at the top of the stack.
  *
  * Will abort if the stack is empty.
