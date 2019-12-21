@@ -159,9 +159,10 @@ static void lsp_put_at_offset(lsp_ref_t value, int offset);
 static void lsp_push_null_terminated(lsp_type_t type, char const *value);
 
 
-static inline int lsp_popcount(uint32_t x) {
+static int lsp_popcount(uint32_t x) {
     return __builtin_popcount(x);
 }
+
 
 void lsp_vm_init(void) {
     // TODO This doesn't work if overcommit is disabled.
@@ -263,7 +264,17 @@ static void lsp_gc_internal_mark_heap(void) {
 }
 
 static void lsp_gc_internal_rebuild_offset_cache(void) {
-    // TODO
+    uint32_t offset = 0;
+    for (unsigned int i = 0; i < cons_heap_ptr; i++) {
+        cons_heap_offset_cache[i] = offset;
+        offset += lsp_popcount(cons_heap_mark_bitset[i]);
+    }
+
+    offset = 0;
+    for (unsigned int i = 0; i < data_heap_ptr; i++) {
+        data_heap_offset_cache[i] = offset;
+        offset += lsp_popcount(data_heap_mark_bitset[i]);
+    }
 }
 
 static void lsp_gc_internal_compact(void) {
