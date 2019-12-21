@@ -96,12 +96,48 @@ static int ref_frame_ptr;
 /**
  * Arrays used for bookkeeping during garbage collection.
  */
-//static uint32_t mark_stack;
-//static char *cons_heap_mark_bitset;
-//static char *data_heap_mark_bitset;
-//static uint64_t *cons_heap_offset_cache;
-//static uint64_t *data_heap_offset_cache;
 
+/**
+ * A stack of offsets into the cons heap.  This is used to keep track of cons
+ * cells that need to be visited by the garbage collector.
+ */
+// TODO Work out real limit.  Should be approximately half CONS_HEAP_MAX;
+static const int MARK_STACK_MAX = CONS_HEAP_MAX;
+static lsp_ref_t *mark_stack;
+static size_t mark_stack_ptr;
+
+/**
+ * A bitset with one bit for each pair in the cons heap.  Will be updated by
+ * the garbage collector, which will set the corresponding bit for each
+ * reachable cons cell.
+ */
+static const int CONS_HEAP_MARK_BITSET_MAX = CONS_HEAP_MAX / 32;
+static uint32_t *cons_heap_mark_bitset;
+
+/**
+ * A bitset with one bit for each word in the data heap.  Bits corresponding to
+ * reachable words will be set to one by the garbage collector.
+ */
+static const int DATA_HEAP_MARK_BITSET_MAX = DATA_HEAP_MAX / 32;
+static uint32_t *data_heap_mark_bitset;
+
+/**
+ * For each block of 8 bytes in the `cons_heap_mark_bitset`, contains a cache
+ * of the sum of the popcount of all preceding bytes.  The offset of a cons
+ * cell in the heap after compaction is equal to the number of the bits that
+ * are set before it.
+ */
+static const int CONS_HEAP_OFFSET_CACHE_MAX = CONS_HEAP_MARK_BITSET_MAX;
+static uint32_t *cons_heap_offset_cache;
+
+/**
+ * For each block of ??? bytes in the `data_heap_mark_bitset`, contains a cache
+ * of the sum of the popcount of all preceding bytes.  The offset of a word in
+ * the data heap after compaction is equal to the number of the bits that are
+ * set before it.
+ */
+static const int DATA_HEAP_OFFSET_CACHE_MAX = DATA_HEAP_MARK_BITSET_MAX;
+static uint32_t *data_heap_offset_cache;
 
 /**
  * Internal forward declarations.
@@ -123,6 +159,10 @@ static void lsp_put_at_offset(lsp_ref_t value, int offset);
 static void lsp_push_null_terminated(lsp_type_t type, char const *value);
 
 
+static inline int lsp_popcount(uint32_t x) {
+    return __builtin_popcount(x);
+}
+
 void lsp_vm_init(void) {
     // TODO This doesn't work if overcommit is disabled.
     // Block size times maximum index.
@@ -139,9 +179,68 @@ void lsp_vm_init(void) {
     ref_stack_ptr = 0;
     ref_frame_ptr = 0;
 
+    mark_stack = (lsp_ref_t *) malloc(MARK_STACK_MAX * sizeof(lsp_ref_t));
+    assert(mark_stack != NULL);
+    mark_stack_ptr = 0;
+
+    cons_heap_offset_cache = (uint32_t *) malloc(
+        CONS_HEAP_OFFSET_CACHE_MAX * sizeof(uint32_t)
+    );
+    assert(cons_heap_offset_cache != NULL);
+
+    data_heap_offset_cache = (uint32_t *) malloc(
+        DATA_HEAP_OFFSET_CACHE_MAX * sizeof(uint32_t)
+    );
+    assert(data_heap_offset_cache != NULL);
+
+    cons_heap_mark_bitset = (uint32_t *) malloc(
+        CONS_HEAP_MARK_BITSET_MAX * sizeof(uint32_t)
+    );
+    assert(cons_heap_mark_bitset != NULL);
+
+    data_heap_mark_bitset = (uint32_t *) malloc(
+        DATA_HEAP_MARK_BITSET_MAX * sizeof(uint32_t)
+    );
+    assert(data_heap_mark_bitset != NULL);
+
     // The first object allocated on the data stack must always be the null
     // singleton.
     lsp_heap_alloc_null();
+}
+
+
+static void lsp_gc_internal_reset(void) {
+    mark_stack_ptr = 0;
+}
+
+static void lsp_gc_internal_mark_ref(lsp_ref_t ref) {
+    if (ref.is_cons) {
+        off_t word = ref.offset >> 5;
+        int bit = ref.offset & 0x1f;
+        uint32_t bitmask = 0x01 << bit;
+
+        if (cons_heap_mark_bitset[word] & bitmask) {
+            return;
+        }
+
+        cons_heap_mark_bitset[word] |= bitmask;
+
+        mark_stack[mark_stack_ptr] = ref;
+        mark_stack_ptr++;
+    } else {
+        size_t size = lsp_heap_get_header(ref)->size;
+
+        for (
+            uint32_t offset = ref.offset;
+            offset < ref.offset + size;
+            offset++
+        ) {
+            off_t word = offset >> 5;
+            int bit = offset & 0x1f;
+
+            data_heap_mark_bitset[word] |= 0x01 << bit;
+        }
+    }
 }
 
 
@@ -149,7 +248,18 @@ void lsp_vm_init(void) {
  * Internal functions for actually performing a garbage collection.
  */
 static void lsp_gc_internal_mark_heap(void) {
-    // TODO
+    lsp_gc_internal_mark_ref(LSP_NULL);
+
+    for (off_t i = 0; i < ref_stack_ptr; i++) {
+        lsp_ref_t ref = ref_stack[i];
+        lsp_gc_internal_mark_ref(ref);
+    }
+
+    while (mark_stack_ptr) {
+        mark_stack_ptr--;
+        lsp_ref_t ref = mark_stack[mark_stack_ptr];
+        lsp_gc_internal_mark_ref(ref);
+    }
 }
 
 static void lsp_gc_internal_rebuild_offset_cache(void) {
@@ -160,17 +270,37 @@ static void lsp_gc_internal_compact(void) {
     // TODO
 }
 
+static void lsp_gc_internal_update_heap(void) {
+    // Iterates over the cons heap, and updates each pointer to point to its
+    // new location.
+}
+
 static void lsp_gc_internal_update_stack(void) {
-    // TODO
+    // Updates each reference on the stack to point to the new location of the
+    // data.
 }
 
 void lsp_gc_collect(void) {
+    lsp_gc_internal_reset();
     lsp_gc_internal_mark_heap();
     lsp_gc_internal_rebuild_offset_cache();
     lsp_gc_internal_compact();
+    lsp_gc_internal_update_heap();
     lsp_gc_internal_update_stack();
 }
 
+void lsp_gc_maybe_collect(void) {
+    // Don't collect unless there have been a good number of allocations.
+
+    // If number of objects in data heap is greater than stack size plus the
+    // number of cons cells then some of them must be inaccessible.
+
+    // If the heap has grown by more than a certain amount since the last
+    // collection then it should be worth re-scanning it.
+
+
+    lsp_gc_collect();
+}
 
 /**
  * Heap operations.
@@ -238,6 +368,8 @@ static lsp_ref_t lsp_heap_alloc_null(void) {
 static lsp_ref_t lsp_heap_alloc_cons(void) {
     assert(cons_heap_ptr < CONS_HEAP_MAX);
 
+    lsp_gc_maybe_collect();
+
     // Construct a reference.
     lsp_ref_t ref;
     ref.is_cons = true;
@@ -256,10 +388,13 @@ static lsp_ref_t lsp_heap_alloc_cons(void) {
 
 
 static lsp_ref_t lsp_heap_alloc_data(lsp_type_t type, size_t size) {
+    assert(size < DATA_HEAP_MAX);
+
+    lsp_gc_maybe_collect();
+
     // Offset zero is reserved for null.
     assert(data_heap_ptr >= 1);
     // TODO check upper bound.
-
 
     // Construct a reference to the data pointed to by ptr.
     lsp_ref_t ref;
