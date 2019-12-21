@@ -63,7 +63,7 @@ static const lsp_ref_t LSP_NULL = {
  * `cons_heap` is a pointer to the root of the heap.  `cons_heap_ptr` is the
  * offset of the next unused cons cell.
  */
-static const lsp_offset_t CONS_HEAP_MAX = 1048576;  // 0x80000000;
+#define CONS_HEAP_MAX 1048576  // 0x80000000;
 static lsp_cons_t *cons_heap;
 static lsp_offset_t cons_heap_ptr;
 
@@ -78,7 +78,7 @@ static lsp_offset_t cons_heap_ptr;
  * `data_heap` is a pointer to the root of the heap.  `data_heap_ptr` is equal
  * to the number of 8 byte blocks before the next available blocks.
  */
-static const lsp_offset_t DATA_HEAP_MAX = 1048576;  //  0x80000000;
+#define DATA_HEAP_MAX 1048576  //  0x80000000;
 static char *data_heap;
 static lsp_offset_t data_heap_ptr;
 
@@ -87,7 +87,7 @@ static lsp_offset_t data_heap_ptr;
  * The reference stack is a stack of references to data on one of the two heaps
  * that is used as working memory for the process.
  */
-static const int REF_STACK_MAX = 0x100000;
+#define REF_STACK_MAX 0x100000
 static lsp_ref_t *ref_stack;
 static int ref_stack_ptr;
 static int ref_frame_ptr;
@@ -102,7 +102,7 @@ static int ref_frame_ptr;
  * cells that need to be visited by the garbage collector.
  */
 // TODO Work out real limit.  Should be approximately half CONS_HEAP_MAX;
-static const int MARK_STACK_MAX = CONS_HEAP_MAX;
+#define MARK_STACK_MAX CONS_HEAP_MAX
 static lsp_ref_t *mark_stack;
 static size_t mark_stack_ptr;
 
@@ -111,14 +111,14 @@ static size_t mark_stack_ptr;
  * the garbage collector, which will set the corresponding bit for each
  * reachable cons cell.
  */
-static const int CONS_HEAP_MARK_BITSET_MAX = CONS_HEAP_MAX / 32;
+#define CONS_HEAP_MARK_BITSET_MAX (CONS_HEAP_MAX / 32)
 static uint32_t *cons_heap_mark_bitset;
 
 /**
  * A bitset with one bit for each word in the data heap.  Bits corresponding to
  * reachable words will be set to one by the garbage collector.
  */
-static const int DATA_HEAP_MARK_BITSET_MAX = DATA_HEAP_MAX / 32;
+#define DATA_HEAP_MARK_BITSET_MAX (DATA_HEAP_MAX / 32)
 static uint32_t *data_heap_mark_bitset;
 
 /**
@@ -127,7 +127,7 @@ static uint32_t *data_heap_mark_bitset;
  * cell in the heap after compaction is equal to the number of the bits that
  * are set before it.
  */
-static const int CONS_HEAP_OFFSET_CACHE_MAX = CONS_HEAP_MARK_BITSET_MAX;
+#define CONS_HEAP_OFFSET_CACHE_MAX CONS_HEAP_MARK_BITSET_MAX
 static uint32_t *cons_heap_offset_cache;
 
 /**
@@ -136,7 +136,7 @@ static uint32_t *cons_heap_offset_cache;
  * the data heap after compaction is equal to the number of the bits that are
  * set before it.
  */
-static const int DATA_HEAP_OFFSET_CACHE_MAX = DATA_HEAP_MARK_BITSET_MAX;
+#define DATA_HEAP_OFFSET_CACHE_MAX DATA_HEAP_MARK_BITSET_MAX
 static uint32_t *data_heap_offset_cache;
 
 /**
