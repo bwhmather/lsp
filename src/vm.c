@@ -330,7 +330,7 @@ static lsp_header_t *lsp_heap_get_header(lsp_ref_t ref) {
     assert(ref.offset <= DATA_HEAP_MAX);
     assert(ref.offset < data_heap_ptr);
 
-    return (lsp_header_t *) &data_heap[ref.offset << 4];
+    return (lsp_header_t *) &data_heap[ref.offset << 3];
 }
 
 
