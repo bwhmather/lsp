@@ -162,7 +162,6 @@ static int lsp_popcount(uint32_t x) {
     return __builtin_popcount(x);
 }
 
-
 void lsp_vm_init(void) {
     // TODO This doesn't work if overcommit is disabled.
     // Block size times maximum index.
@@ -211,7 +210,11 @@ void lsp_vm_init(void) {
 
 static void lsp_gc_internal_reset(void) {
     mark_stack_ptr = 0;
+
+    memset(cons_heap_mark_bitset, 0, 4 * ((cons_heap_ptr / 32) + 1));
+    memset(data_heap_mark_bitset, 0, 4 * ((data_heap_ptr / 32) + 1));
 }
+
 
 static void lsp_gc_internal_mark_ref(lsp_ref_t ref) {
     if (ref.is_cons) {
