@@ -228,20 +228,20 @@ static void lsp_gc_internal_mark_ref(lsp_ref_t ref) {
 
         cons_heap_mark_bitset[word] |= bitmask;
 
-        mark_stack[mark_stack_ptr] = ref;
-        mark_stack_ptr++;
+        mark_stack[mark_stack_ptr++] = ref;
     } else {
         size_t size = lsp_heap_get_header(ref)->size;
 
         for (
             uint32_t offset = ref.offset;
-            offset < ref.offset + size;
+            offset < ref.offset + 1 + size;
             offset++
         ) {
             off_t word = offset >> 5;
             int bit = offset & 0x1f;
+            uint32_t bitmask = 0x01 << bit;
 
-            data_heap_mark_bitset[word] |= 0x01 << bit;
+            data_heap_mark_bitset[word] |= bitmask;
         }
     }
 }
@@ -261,7 +261,10 @@ static void lsp_gc_internal_mark_heap(void) {
     while (mark_stack_ptr) {
         mark_stack_ptr--;
         lsp_ref_t ref = mark_stack[mark_stack_ptr];
-        lsp_gc_internal_mark_ref(ref);
+
+        lsp_cons_t *cons = lsp_heap_get_cons(ref);
+        lsp_gc_internal_mark_ref(cons->car);
+        lsp_gc_internal_mark_ref(cons->cdr);
     }
 }
 
