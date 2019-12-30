@@ -282,18 +282,107 @@ static void lsp_gc_internal_rebuild_offset_cache(void) {
     }
 }
 
+static lsp_ref_t lsp_gc_internal_rewrite_ref(lsp_ref_t old) {
+    lsp_ref_t new;
+
+    off_t bitset_word = old.offset >> 5;
+    int bitset_bit = old.offset & 0x1f;
+
+    uint32_t offset_bitmask = 0;
+    if (bitset_bit != 0) {
+        offset_bitmask = 0xffffffff >> (32 - bitset_bit);
+    }
+
+    if (old.is_cons) {
+        uint32_t base_offset = cons_heap_offset_cache[bitset_word];
+
+        uint32_t bit_offset = lsp_popcount(
+            cons_heap_mark_bitset[bitset_word] & offset_bitmask
+        );
+
+        new.is_cons = true;
+        new.offset = base_offset + bit_offset;
+
+        assert(new.offset < cons_heap_ptr);
+        assert(new.offset <= old.offset);
+    } else {
+        uint32_t base_offset = data_heap_offset_cache[bitset_word];
+
+        uint32_t bit_offset = lsp_popcount(
+            data_heap_mark_bitset[bitset_word] & offset_bitmask
+        );
+
+        new.is_cons = false;
+        new.offset = base_offset + bit_offset;
+
+        assert(new.offset < data_heap_ptr);
+        assert(new.offset <= old.offset);
+    }
+
+    return new;
+}
+
 static void lsp_gc_internal_compact(void) {
-    // TODO
+    uint32_t old_offset;
+    uint32_t new_offset = 0;
+    for (old_offset = 0; old_offset < cons_heap_ptr; old_offset++) {
+        off_t bitset_word = old_offset >> 5;
+        int bitset_bit = old_offset & 0x1f;
+        uint32_t mark_bitmask = 0x01 << bitset_bit;
+
+        if (!(cons_heap_mark_bitset[bitset_word] & mark_bitmask)) {
+            continue;
+        }
+
+        if (new_offset != old_offset) {
+            memcpy(
+                &cons_heap[new_offset], &cons_heap[old_offset],
+                sizeof(lsp_cons_t)
+            );
+        }
+        new_offset += 1;
+    }
+    cons_heap_ptr = new_offset;
+
+    new_offset = 0;
+    for (old_offset = 0; old_offset < data_heap_ptr; old_offset++) {
+        off_t bitset_word = old_offset >> 5;
+        int bitset_bit = old_offset & 0x1f;
+        uint32_t mark_bitmask = 0x01 << bitset_bit;
+
+        if (!(data_heap_mark_bitset[bitset_word] & mark_bitmask)) {
+            continue;
+        }
+
+        if (new_offset != old_offset) {
+            memcpy(&data_heap[8 * new_offset], &data_heap[8 * old_offset], 8);
+        }
+
+        new_offset += 1;
+    }
+    data_heap_ptr = new_offset;
 }
 
 static void lsp_gc_internal_update_heap(void) {
     // Iterates over the cons heap, and updates each pointer to point to its
     // new location.
+    for (uint32_t offset = 0; offset < cons_heap_ptr; offset++) {
+        cons_heap[offset].car = lsp_gc_internal_rewrite_ref(
+            cons_heap[offset].car
+        );
+
+        cons_heap[offset].cdr = lsp_gc_internal_rewrite_ref(
+            cons_heap[offset].cdr
+        );
+    }
 }
 
 static void lsp_gc_internal_update_stack(void) {
     // Updates each reference on the stack to point to the new location of the
     // data.
+    for (int offset = 0; offset < ref_stack_ptr; offset++) {
+        ref_stack[offset] = lsp_gc_internal_rewrite_ref(ref_stack[offset]);
+    }
 }
 
 void lsp_gc_collect(void) {
