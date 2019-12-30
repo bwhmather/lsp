@@ -45,8 +45,8 @@ typedef struct {
  * Header for an object stored on the data heap.
  */
 typedef struct {
-    lsp_type_t type;
-    uint32_t size;
+    lsp_type_t type : 32;
+    uint32_t size : 32;
     char data[];
 } lsp_header_t;
 
