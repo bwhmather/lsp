@@ -100,6 +100,6 @@ foreach suite, tests : test_suites
       link_with : lib,
       install : false,
     )
-    test(suite + ':' + test_name, test_exe)
+    test(suite + '_' + test_name, test_exe)
   endforeach
 endforeach
