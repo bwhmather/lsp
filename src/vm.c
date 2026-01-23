@@ -141,10 +141,6 @@ static uint32_t *data_heap_offset_cache;
 /**
  * Internal forward declarations.
  */
-static void lsp_gc_internal_mark_heap(void);
-static void lsp_gc_internal_rebuild_offset_cache(void);
-static void lsp_gc_internal_compact(void);
-static void lsp_gc_internal_update_stack(void);
 static lsp_cons_t *lsp_heap_get_cons(lsp_ref_t ref);
 static lsp_header_t *lsp_heap_get_header(lsp_ref_t ref);
 static lsp_type_t lsp_heap_get_type(lsp_ref_t ref);
@@ -207,15 +203,6 @@ void lsp_vm_init(void) {
     lsp_heap_alloc_null();
 }
 
-
-static void lsp_gc_internal_reset(void) {
-    mark_stack_ptr = 0;
-
-    memset(cons_heap_mark_bitset, 0, 4 * ((cons_heap_ptr / 32) + 1));
-    memset(data_heap_mark_bitset, 0, 4 * ((data_heap_ptr / 32) + 1));
-}
-
-
 static void lsp_gc_internal_mark_ref(lsp_ref_t ref) {
     if (ref.is_cons) {
         off_t word = ref.offset >> 5;
@@ -243,42 +230,6 @@ static void lsp_gc_internal_mark_ref(lsp_ref_t ref) {
 
             data_heap_mark_bitset[word] |= bitmask;
         }
-    }
-}
-
-
-/**
- * Internal functions for actually performing a garbage collection.
- */
-static void lsp_gc_internal_mark_heap(void) {
-    lsp_gc_internal_mark_ref(LSP_NULL);
-
-    for (off_t i = 0; i < ref_stack_ptr; i++) {
-        lsp_ref_t ref = ref_stack[i];
-        lsp_gc_internal_mark_ref(ref);
-    }
-
-    while (mark_stack_ptr) {
-        mark_stack_ptr--;
-        lsp_ref_t ref = mark_stack[mark_stack_ptr];
-
-        lsp_cons_t *cons = lsp_heap_get_cons(ref);
-        lsp_gc_internal_mark_ref(cons->car);
-        lsp_gc_internal_mark_ref(cons->cdr);
-    }
-}
-
-static void lsp_gc_internal_rebuild_offset_cache(void) {
-    uint32_t offset = 0;
-    for (unsigned int i = 0; i < cons_heap_ptr; i++) {
-        cons_heap_offset_cache[i] = offset;
-        offset += lsp_popcount(cons_heap_mark_bitset[i]);
-    }
-
-    offset = 0;
-    for (unsigned int i = 0; i < data_heap_ptr; i++) {
-        data_heap_offset_cache[i] = offset;
-        offset += lsp_popcount(data_heap_mark_bitset[i]);
     }
 }
 
@@ -322,7 +273,46 @@ static lsp_ref_t lsp_gc_internal_rewrite_ref(lsp_ref_t old) {
     return new;
 }
 
-static void lsp_gc_internal_compact(void) {
+
+void lsp_gc_collect(void) {
+    mark_stack_ptr = 0;
+
+    memset(cons_heap_mark_bitset, 0, 4 * ((cons_heap_ptr / 32) + 1));
+    memset(data_heap_mark_bitset, 0, 4 * ((data_heap_ptr / 32) + 1));
+
+    // Traverse heap and mark reachable.
+    lsp_gc_internal_mark_ref(LSP_NULL);
+
+    for (off_t i = 0; i < ref_stack_ptr; i++) {
+        lsp_ref_t ref = ref_stack[i];
+        lsp_gc_internal_mark_ref(ref);
+    }
+
+    while (mark_stack_ptr) {
+        mark_stack_ptr--;
+        lsp_ref_t ref = mark_stack[mark_stack_ptr];
+
+        lsp_cons_t *cons = lsp_heap_get_cons(ref);
+        lsp_gc_internal_mark_ref(cons->car);
+        lsp_gc_internal_mark_ref(cons->cdr);
+    }
+
+
+    // Rebuild cons heap offset cache.
+    uint32_t offset = 0;
+    for (unsigned int i = 0; i < cons_heap_ptr; i++) {
+        cons_heap_offset_cache[i] = offset;
+        offset += lsp_popcount(cons_heap_mark_bitset[i]);
+    }
+
+    // Rebuild data heap offset cache.
+    offset = 0;
+    for (unsigned int i = 0; i < data_heap_ptr; i++) {
+        data_heap_offset_cache[i] = offset;
+        offset += lsp_popcount(data_heap_mark_bitset[i]);
+    }
+
+    // Compact the cons heap.
     uint32_t old_offset;
     uint32_t new_offset = 0;
     for (old_offset = 0; old_offset < cons_heap_ptr; old_offset++) {
@@ -344,6 +334,7 @@ static void lsp_gc_internal_compact(void) {
     }
     cons_heap_ptr = new_offset;
 
+    // Compact the data heap.
     new_offset = 0;
     for (old_offset = 0; old_offset < data_heap_ptr; old_offset++) {
         off_t bitset_word = old_offset >> 5;
@@ -361,11 +352,8 @@ static void lsp_gc_internal_compact(void) {
         new_offset += 1;
     }
     data_heap_ptr = new_offset;
-}
 
-static void lsp_gc_internal_update_heap(void) {
-    // Iterates over the cons heap, and updates each pointer to point to its
-    // new location.
+    // Iterate over the cons heap, and update each pointer to point to its  new location.
     for (uint32_t offset = 0; offset < cons_heap_ptr; offset++) {
         cons_heap[offset].car = lsp_gc_internal_rewrite_ref(
             cons_heap[offset].car
@@ -375,23 +363,11 @@ static void lsp_gc_internal_update_heap(void) {
             cons_heap[offset].cdr
         );
     }
-}
 
-static void lsp_gc_internal_update_stack(void) {
-    // Updates each reference on the stack to point to the new location of the
-    // data.
+    // Update each reference on the stack to point to the new location of the data.
     for (int offset = 0; offset < ref_stack_ptr; offset++) {
         ref_stack[offset] = lsp_gc_internal_rewrite_ref(ref_stack[offset]);
     }
-}
-
-void lsp_gc_collect(void) {
-    lsp_gc_internal_reset();
-    lsp_gc_internal_mark_heap();
-    lsp_gc_internal_rebuild_offset_cache();
-    lsp_gc_internal_compact();
-    lsp_gc_internal_update_heap();
-    lsp_gc_internal_update_stack();
 }
 
 void lsp_gc_maybe_collect(void) {
